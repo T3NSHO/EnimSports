@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Home, Inbox, Search, Settings, LogOut } from "lucide-react";
+import { CalendarSearch,Calendar, Home, Inbox, Search, Settings, LogOut , CalendarRange, Trophy, LandPlot, Dumbbell ,UserRoundPen ,UserRoundCog, ClipboardPlus}  from "lucide-react";
 
 import {
   Sidebar,
@@ -12,37 +12,136 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/app/components/ui/sidebar";
+import { signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 // Menu items.
-const items = [
-  {
-    title: "Home",
-    url: "#",
-    icon: Home,
-  },
-  {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
-  },
-  {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
-  },
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
-  },
-];
-
 export function AppSidebar() {
+  const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return <p>Loading...</p>;
+  }
+  
+  if (!session) {
+    return <p>User is not authenticated. Please log in.</p>;
+  }
+
+  const items = [
+    {
+      title: "Home",
+      url: "/dashboard",
+      icon: Home,
+    },
+    {
+      title: "Notifications",
+      url: "/dashboard/components/student/Notifications",
+      icon: Inbox
+    },
+    {
+      title: "Tournaments",
+      url: "/dashboard/components/student/TournamentManagement",
+      icon: Trophy,
+    },
+    {
+      title: "Fields booking",
+      url: "/dashboard/components/student/ReservationSystem",
+      icon: LandPlot,
+    },
+    {
+      title: "Profile",
+      url: "/dashboard/components/student/Profile",
+      icon: UserRoundPen,
+    },{
+      title:"gym schedule",
+      url:"/dashboard/components/student/GymTimeTable",
+      icon: Dumbbell,
+    },
+    {
+      title: "Results",
+      url: "#",
+      icon: CalendarRange,
+    },
+  ];
+
+  const adminitems = [
+    {
+      title: "Home",
+      url: "/dashboard",
+      icon: Home,
+    },
+    {
+      title: "System Notifications",
+      url: "/dashboard/components/admin/notifications",
+      icon: Inbox
+    },
+    {
+      title: "Tournaments",
+      url: "/dashboard/components/student/TournamentManagement",
+      icon: Trophy,
+    },
+    {
+      title: "Profile",
+      url: "/dashboard/components/admin/Profile",
+      icon: UserRoundPen,
+    },{
+      title:"User management",
+      url:"/dashboard/components/admin/usersManagement",
+      icon: UserRoundCog,
+    },
+    {
+      title: "Facility Reports",
+      url: "/dashboard/components/admin/reports",
+      icon: ClipboardPlus,
+    }
+  ];
+
+  const organizeritems = [
+    {
+      title: "Home",
+      url: "/dashboard",
+      icon: Home,
+    },
+    {
+      title: "System Notifications",
+      url: "/dashboard/components/organizer/notifications",
+      icon: Inbox
+    },
+    {
+      title: "Tournaments",
+      url: "/dashboard/components/student/TournamentManagement",
+      icon: Trophy,
+    },
+    {
+      title: "Profile",
+      url: "/dashboard/components/organizer/Profile",
+      icon: UserRoundPen,
+    },{
+      title:"Facility management",
+      url:"/dashboard/components/organizer/FieldManagement",
+      icon: LandPlot,
+    },
+    {
+      title: "Facility Reports",
+      url: "/dashboard/components/organizer/reports",
+      icon: ClipboardPlus,
+    }
+  ];
+
+  // Determine the items to use based on user role
+  let menuItems;
+  switch (session.user.role) {
+    case "admin":
+      menuItems = adminitems;
+      break;
+    case "organizer":
+      menuItems = organizeritems;
+      break;
+    default:
+      menuItems = items;
+      break;
+  }
+
   return (
     <Sidebar>
       <SidebarContent>
@@ -54,13 +153,13 @@ export function AppSidebar() {
             </h1>
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title} className="my-4">
+            <SidebarMenu className="">
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.title} className="my-2 ">
                   <SidebarMenuButton asChild>
                     <a
                       href={item.url}
-                      className="flex items-center space-x-4 p-3 rounded-md hover:bg-black-200 transition"
+                      className="flex items-center space-x-4 p-3 rounded-md h-full hover:bg-black-200 transition"
                     >
                       <item.icon className="w-8 h-8" />
                       <span className="text-lg font-medium">{item.title}</span>
@@ -77,7 +176,7 @@ export function AppSidebar() {
       <div className="absolute bottom-4 left-0 w-full">
         <button
           className="flex items-center space-x-4 p-3 rounded-md hover:bg-red-100 text-red-600 transition w-full"
-          onClick={() => console.log("Logging out...")}
+          onClick={() => signOut()}
         >
           <LogOut className="w-5 h-5" />
           <span className="text-lg font-medium">Logout</span>

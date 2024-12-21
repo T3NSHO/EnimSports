@@ -1,6 +1,10 @@
 "use client";
+import { useSession } from "next-auth/react";
 
 import React, { useState } from "react";
+
+import { useRouter } from "next/navigation";
+import delay from "@/lib/sleep";
 import {
   Trophy,
   Calendar,
@@ -13,8 +17,14 @@ import {
   PlusCircle,
   Minus,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const TournamentCreationForm = () => {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const { toast } = useToast();
+  
+ 
   const [tournamentTitle, setTournamentTitle] = useState("");
   const [tournamentPrize, setTournamentPrize] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -23,6 +33,14 @@ const TournamentCreationForm = () => {
   const [esportGame, setEsportGame] = useState("");
   const [numberOfTeams, setNumberOfTeams] = useState(2);
   const [tournamentFormat, setTournamentFormat] = useState("");
+  if (status === "loading") {
+    return <p>Loading...</p>;
+  }
+
+  if (!session) {
+    return <p>User is not authenticated. Please log in.</p>;
+  }
+  const tournament_organizer = session.user.id as string;
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -36,11 +54,12 @@ const TournamentCreationForm = () => {
       sportDetails: tournamentType === "real-sports" ? sportType : esportGame,
       numberOfTeams,
       format: tournamentFormat,
+      tournament_organizer: tournament_organizer,
     };
-    console.log(" this data will pushed to the DB :", tournamentData);
+    
     try {
       // Example of potential API call in Next.js
-      const response = await fetch("/api/tournaments", {
+      const response = await fetch("/api/register_tournament", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -48,21 +67,28 @@ const TournamentCreationForm = () => {
         body: JSON.stringify(tournamentData),
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log("Tournament created:", result);
-        // Optional: Reset form or redirect
-      } else {
-        console.error("Failed to create tournament");
-      }
-    } catch (error) {
-      console.error("Error creating tournament:", error);
-    }
+     if (response.status === 201) {
+           toast({
+             variant: "success",
+             title: "Tournament created successfully",
+             description: "You will be redirected to the Dashboard page",
+           });
+           delay(1500);
+           router.push("/dashboard");
+         } 
+        } catch (error) {
+          console.error("Tournament creation error:", error);
+          toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "Tournament not created successfully : " + error,
+          });
+        }
   };
 
   return (
-    <div className="min-h-screen w-full bg-gray-900 text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-full flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
+    <div className="w-full min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
+      <div className="w-full flex flex-col items-center justify-center lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
         {/* Tournament Creation Form */}
         <div className="w-full lg:w-full bg-gray-800 rounded-lg shadow-lg p-6 md:p-8">
           <h2 className="text-3xl font-bold mb-6 text-center text-white flex items-center justify-center">
@@ -127,10 +153,10 @@ const TournamentCreationForm = () => {
                 required
               />
             </div>
-            <div class="mb-6">
+            <div className="mb-6">
               <label
-                for="description"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                htmlFor="description"
+                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
               >
                 Large input
               </label>
@@ -138,7 +164,7 @@ const TournamentCreationForm = () => {
                 type="text"
                 placeholder="ex: The Grand Arena Tournament ..."
                 id="description"
-                class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                className="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               />
             </div>
 

@@ -1,0 +1,104 @@
+/* Center the table and adjust layout */
+.controls {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 10px 0;
+}
+
+.search-input,
+.filter-select {
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #0b162c;
+    border-radius: 5px;
+    width: 48%;
+    max-width: 300px;
+    background-color: #11213e;
+    color: white;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.search-input:focus,
+.filter-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    outline: none;
+}
+
+.search-input::placeholder,
+.filter-select option {
+    color: #ccc;
+}
+
+/* Hover Effect */
+.search-input:hover,
+.filter-select:hover {
+    border-color: #007bff;
+}
+
+/* Adjust dropdown styling */
+.filter-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23ccc' d='M2 0L0 2h4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 10px 10px;
+}
+  
+
+.table-container {
+    width: 90%;
+    margin: 2% 5% 0 5%;
+    padding-top: 10px;
+    text-align: center;
+  }
+  
+  /* Table styling */
+  .custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #11213e;
+    color: white;
+    font-size: 0.8rem;
+    text-align: center;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .custom-table th,
+  .custom-table td {
+    padding: 15px;
+    text-align: center;
+    border-bottom: 1px solid #333;
+  }
+  
+  .custom-table th {
+    font-size: 1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    background-color: #0b162c;
+    color: white;
+  }
+  
+  .custom-table tr:last-child td {
+    border-bottom: none;
+  }
+  
+  /* Highlight the winner */
+  .winner {
+    color: limegreen;
+    font-weight: bold;
+    animation: highlight 1.5s ease-in-out infinite alternate;
+  }
+  
+  /* Animation */
+  @keyframes highlight {
+    from {
+      color: rgb(0, 177, 0);
+    }
+    to {
+      color: rgb(181, 255, 181);
+    }
+  }
+  

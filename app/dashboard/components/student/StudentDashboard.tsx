@@ -12,50 +12,16 @@ import DashboardCard from "../DashboardCard";
 
 function StudentDashboard() {
   return (
-    <div className="p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <DashboardCard
-        title="Profile"
-        description="Manage your personal information."
-        icon={<User2 size={32} className="text-yellow-500" />}
-        path="dashboard/components/admin/Profile"
-      />
-
-      <DashboardCard
-        title="Tournament Management"
-        description="Overview of upcoming and ongoing tournaments."
-        icon={<Medal size={32} className="text-green-500" />}
-        path="dashboard/components/student/TournamentManagement"
-      />
-
-      <DashboardCard
-        title="Reservation System"
-        description="Book sports facilities and view real-time availability."
-        icon={<Calendar size={32} className="text-blue-500 " />}
-        path="dashboard/components/student/ReservationSystem"
-      />
-
-      <DashboardCard
-        title="Notifications"
-        description="Alerts for upcoming events and announcements."
-        iconColor="text-red-500"
-        icon={<Bell size={32} className="text-red-500" />}
-        path="dashboard/components/student/Notifications"
-      />
-
-      <DashboardCard
-        title=" Gym Timetable Overview"
-        description="View opening hours and calendar for gym."
-        icon={<Clock size={32} className="text-purple-500" />}
-        path="dashboard/components/student/GymTimeTable"
-      />
-      <DashboardCard
-        title=" roles and policies "
-        description="Roles and Policies of the Platform and School"
-        icon={<MessageCircle size={32} className="text-pink-500" />}
-        path="dashboard/components/student/RolesAndPolicies "
-      />
+    <div className="flex flex-col items-center justify-center w-full h-full">
+    <h1 className="text-2xl font-bold mb-4 text-white-800">Bienvenue</h1>
+    <div className="flex justify-center w-full max-w-4xl bg-black rounded-lg overflow-hidden">
+        <video controls className="w-full h-full">
+            <source src="/path-to-your-video.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+        </video>
     </div>
+</div>
   );
-}
+};
 
 export default StudentDashboard;
