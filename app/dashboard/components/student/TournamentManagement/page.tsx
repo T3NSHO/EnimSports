@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import generateTournament from "@/lib/generate_matches";
 import {
   Dialog,
@@ -27,7 +27,8 @@ export default function TournamentsPage() {
   const [openOngoing, setOpenOngoing] = useState<string | null>(null);
   const [openUpcoming, setOpenUpcoming] = useState<string | null>(null);
   const [showOngoing, setShowOngoing] = useState(true);
-  const [teamNames, setTeamNames] = useState<{ [key: string]: string[] }>({});
+  const [teamNames, setTeamNames] = useState<{ [key: string]: string }>({});
+  const processingRef = useRef(false);
 
   // Fetch tournaments
   useEffect(() => {
@@ -39,37 +40,31 @@ export default function TournamentsPage() {
         });
         const data = await response.json();
 
-        // Separate ongoing and upcoming tournaments
         const ongoing = data.filter((tournament: any) => tournament.status === "ongoing");
         const upcoming = data.filter((tournament: any) => tournament.status === "upcoming");
 
         setTournaments({ ongoing, upcoming });
 
-        // Combine all unique team IDs from both ongoing and upcoming tournaments
         const allTeamIds = [
           ...new Set([
             ...ongoing.flatMap((t: any) => t.registered_teams),
-            ...upcoming.flatMap((t: any) => t.registered_teams)
-          ])
+            ...upcoming.flatMap((t: any) => t.registered_teams),
+          ]),
         ];
 
-        // Fetch team names if there are team IDs
         if (allTeamIds.length > 0) {
           const teamResponse = await fetch("/api/get_teams_name", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ team_ids: allTeamIds }),
           });
           const teamNamesData = await teamResponse.json();
 
-          // Create a mapping of team ID to team name
           const teamNameMap = allTeamIds.reduce((acc, id, index) => {
             acc[id] = teamNamesData[index] || "Unknown Team";
             return acc;
           }, {} as { [key: string]: string });
-
+          
           setTeamNames(teamNameMap);
         }
       } catch (error) {
@@ -81,29 +76,21 @@ export default function TournamentsPage() {
 
     fetchTournaments();
   }, []);
-
-  const handleOngoingInspect = (id: string) => {
-    setOpenOngoing(id);
-  };
-
-  const handleUpcomingInspect = (id: string) => {
-    setOpenUpcoming(id);
+  
+  // Process tournaments
+  const getTeamNames = (teamIds: string[]) => {
+    return teamIds.length > 0
+      ? teamIds.map((id) => teamNames[id] || "Unknown Team").join(", ")
+      : "No teams registered";
   };
 
   if (isLoading) {
     return <p>Loading tournaments...</p>;
   }
 
-  // Helper function to convert team IDs to names
-  const getTeamNames = (teamIds: string[]) => {
-    return teamIds.length > 0 
-      ? teamIds.map(id => teamNames[id] || "Unknown Team").join(", ")
-      : "No teams registered";
-  };
-  console.log(generateTournament(tournaments.ongoing[0].registered_teams));
   return (
+    
     <div className="w-full h-full space-y-10">
-      {/* Toggle between Ongoing and Upcoming tournaments */}
       <div className="flex items-center justify-center mb-6">
         <button
           className={`px-6 py-2 mr-4 ${
@@ -123,7 +110,6 @@ export default function TournamentsPage() {
         </button>
       </div>
 
-      {/* Display Ongoing or Upcoming Tournaments based on the toggle */}
       {showOngoing ? (
         <section>
           <h2 className="text-2xl font-semibold mb-4">Ongoing Tournaments</h2>
@@ -155,7 +141,7 @@ export default function TournamentsPage() {
                       <DialogTrigger asChild>
                         <span
                           className="text-blue-500 hover:text-blue-700 cursor-pointer"
-                          onClick={() => handleOngoingInspect(tournament._id)}
+                          onClick={() => setOpenOngoing(tournament._id)}
                         >
                           Inspect
                         </span>
@@ -165,12 +151,13 @@ export default function TournamentsPage() {
                           <DialogTitle>{tournament.tournament_name}</DialogTitle>
                           <DialogDescription>{`Format: ${tournament.tournament_format}`}</DialogDescription>
                           <p className="mt-2">
-                            <strong>Teams:</strong>{" "}
-                            {getTeamNames(tournament.registered_teams)}
+                            <strong>Teams:</strong> {getTeamNames(tournament.registered_teams)}
                           </p>
-                          <button className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-md w-full hover:bg-blue-600" >
+                          <a href={`/dashboard/generate_brackets/${tournament._id}`}>
+                          <button className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-md w-full hover:bg-blue-600">
                             See brackets
                           </button>
+                          </a>
                         </DialogHeader>
                       </DialogContent>
                     </Dialog>
@@ -211,7 +198,7 @@ export default function TournamentsPage() {
                       <DialogTrigger asChild>
                         <span
                           className="text-blue-500 hover:text-blue-700 cursor-pointer"
-                          onClick={() => handleUpcomingInspect(tournament._id)}
+                          onClick={() => setOpenUpcoming(tournament._id)}
                         >
                           Inspect
                         </span>
@@ -221,13 +208,12 @@ export default function TournamentsPage() {
                           <DialogTitle>{tournament.tournament_name}</DialogTitle>
                           <DialogDescription>{`Format: ${tournament.tournament_format}`}</DialogDescription>
                           <p className="mt-2">
-                            <strong>Teams:</strong>{" "}
-                            {getTeamNames(tournament.registered_teams)}
+                            <strong>Teams:</strong> {getTeamNames(tournament.registered_teams)}
                           </p>
-                          <a href={`/dashboard/tournament/join_tournament/${tournament._id}`} >
-                          <button className="mt-4 px-6 py-2 bg-green-500 text-white rounded-md w-full hover:bg-green-600" >
-                            Join Tournament
-                          </button>
+                          <a href={`/dashboard/tournament/join_tournament/${tournament._id}`}>
+                            <button className="mt-4 px-6 py-2 bg-green-500 text-white rounded-md w-full hover:bg-green-600">
+                              Join Tournament
+                            </button>
                           </a>
                         </DialogHeader>
                       </DialogContent>

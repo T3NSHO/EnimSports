@@ -3,14 +3,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
-export default function JoinTeam({ params }: { params: Promise<{ tournamentId: string }> }) {
+export default function JoinTeam({ params }: { params: Promise<{ tournamentIdd: string }> }) {
     const router = useRouter();
-    const { tournamentId } = React.use(params); // Unwrapping params with React.use()
+    const { tournamentIdd } = React.use(params); // Unwrapping params with React.use()
     const [status, setStatus] = useState('Processing...');
 
     useEffect(() => {
-        if (tournamentId) {
-            fetch(`/api/join-tournament/${tournamentId}`, {
+        if (tournamentIdd) {
+            fetch(`/api/join-tournament/${tournamentIdd}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -29,7 +29,7 @@ export default function JoinTeam({ params }: { params: Promise<{ tournamentId: s
                     setStatus('An error occurred. Please try again later.');
                 });
         }
-    }, [tournamentId, router]);
+    }, [tournamentIdd, router]);
 
     return (
         <div>

@@ -1,71 +1,140 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { teamModel } from '@/app/models/team-model'; // Adjust path as needed
+
+// Interface for Match Participant
+interface IParticipant {
+  id: string; // Store as plain string for flexibility
+  name: string;
+  isWinner: boolean;
+  status: 'PENDING' | 'PLAYED';
+  resultText: 'WON' | 'LOST' | 'CHAMPION' | 'RUNNER-UP' | null;
+}
 
 // Interface for Match Document
 export interface IMatch extends Document {
   id: number;
   name: string;
-  tournamentId: mongoose.Types.ObjectId; // Tournament ID
-  nextMatchId: number | null; // Reference to the next match, if applicable
+  tournamentId: mongoose.Types.ObjectId;
+  nextMatchId: number | null;
   tournamentRoundText: string;
-  startTime: string; // ISO date string
-  state: string;
-  team1Id: mongoose.Types.ObjectId; // Team 1 ID
-  team2Id: mongoose.Types.ObjectId; // Team 2 ID
-  team1Name?: string; // Automatically populated
-  team2Name?: string; // Automatically populated
-  team1Score?: number; // Optional, defaults to null
-  team2Score?: number; // Optional, defaults to null
-  winner?: string; // Calculated winner based on scores
+  startTime: string;
+  state: 'PENDING' | 'IN_PROGRESS' | 'DONE';
+  participants: IParticipant[];
+  team1Score?: number;
+  team2Score?: number;
 }
 
 // Match Schema
-const MatchSchema = new Schema<IMatch>({
-  id: { type: Number, required: true },
-  name: { type: String, required: true },
-  tournamentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tournament', required: true }, // Reference to Tournament
-  nextMatchId: { type: Number, default: null }, // Optional for linking to the next match
-  tournamentRoundText: { type: String, required: true },
-  startTime: { type: String, required: true }, // ISO date
-  state: { type: String, required: true },
-  team1Id: { type: mongoose.Schema.Types.ObjectId, ref: 'Teams', required: true },
-  team2Id: { type: mongoose.Schema.Types.ObjectId, ref: 'Teams', required: true },
-  team1Name: { type: String },
-  team2Name: { type: String },
-  team1Score: { type: Number, default: null },
-  team2Score: { type: Number, default: null },
-  winner: { type: String },
+const MatchSchema = new Schema<IMatch>(
+  {
+    id: { type: Number, required: true },
+    name: { type: String, required: true },
+    tournamentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Tournament',
+      required: true,
+    },
+    nextMatchId: { type: Number, default: null },
+    tournamentRoundText: { type: String, required: true },
+    startTime: { type: String, required: true },
+    state: {
+      type: String,
+      enum: ['PENDING', 'IN_PROGRESS', 'DONE'],
+      default: 'PENDING',
+      required: true,
+    },
+    participants: {
+      type: [
+        {
+          id: { type: String, required: true }, // Use string for team ID reference
+          name: { type: String, required: true },
+          isWinner: { type: Boolean, default: false },
+          status: {
+            type: String,
+            enum: ['PENDING', 'PLAYED'],
+            default: 'PENDING',
+          },
+          resultText: {
+            type: String,
+            enum: ['WON', 'LOST', 'CHAMPION', 'RUNNER-UP', null],
+            default: null,
+          },
+        },
+      ],
+      default: [], // Default to an empty array
+      validate: [
+        {
+          validator: function (participants: any[]) {
+            return participants.length <= 2;
+          },
+          message: 'A match can only have up to 2 participants',
+        },
+      ],
+    },
+    team1Score: { type: Number, default: null },
+    team2Score: { type: Number, default: null },
+  },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
+
+// Virtual getters for team1Id and team2Id
+MatchSchema.virtual('team1Id').get(function () {
+  return this.participants?.[0]?.id || null;
 });
 
-// Middleware to fetch team names and calculate winner
-MatchSchema.pre('save', async function (next) {
-  const match = this as IMatch;
+MatchSchema.virtual('team2Id').get(function () {
+  return this.participants?.[1]?.id || null;
+});
 
-  // Fetch Team Names
-  if (!match.team1Name) {
-    const team1 = await teamModel.findById(match.team1Id);
-    if (team1) match.team1Name = team1.team_name;
-  }
-  if (!match.team2Name) {
-    const team2 = await teamModel.findById(match.team2Id);
-    if (team2) match.team2Name = team2.team_name;
-  }
+// Methods to manage match state
+MatchSchema.methods.updateScore = async function (team1Score: number, team2Score: number) {
+  this.team1Score = team1Score;
+  this.team2Score = team2Score;
+  this.state = 'DONE';
 
-  // Calculate Winner (if scores are provided)
-  if (match.team1Score != null && match.team2Score != null) {
-    if (match.team1Score > match.team2Score) {
-      match.winner = match.team1Name || 'Team 1';
-    } else if (match.team1Score < match.team2Score) {
-      match.winner = match.team2Name || 'Team 2';
+  // Update participants
+  if (this.participants.length === 2) {
+    if (team1Score > team2Score) {
+      this.participants[0].isWinner = true;
+      this.participants[0].resultText = this.tournamentRoundText === 'Final' ? 'CHAMPION' : 'WON';
+      this.participants[1].isWinner = false;
+      this.participants[1].resultText = this.tournamentRoundText === 'Final' ? 'RUNNER-UP' : 'LOST';
     } else {
-      match.winner = 'Draw';
+      this.participants[0].isWinner = false;
+      this.participants[0].resultText = this.tournamentRoundText === 'Final' ? 'RUNNER-UP' : 'LOST';
+      this.participants[1].isWinner = true;
+      this.participants[1].resultText = this.tournamentRoundText === 'Final' ? 'CHAMPION' : 'WON';
     }
-  } else {
-    match.winner = undefined; // Reset winner if scores are not available
+    this.participants[0].status = 'PLAYED';
+    this.participants[1].status = 'PLAYED';
   }
 
-  next();
-});
+  await this.save();
+};
+
+// Method to advance winner to next match
+MatchSchema.methods.advanceWinner = async function () {
+  if (this.nextMatchId && this.state === 'DONE') {
+    const winner: IParticipant | undefined = this.participants.find((p: IParticipant) => p.isWinner);
+    if (winner) {
+      const nextMatch = await this.model('Match').findOne({ id: this.nextMatchId });
+      if (nextMatch) {
+        // Add winner to next match's participants
+        nextMatch.participants.push({
+          id: winner.id,
+          name: winner.name,
+          isWinner: false,
+          status: 'PENDING',
+          resultText: null,
+        });
+        await nextMatch.save();
+      }
+    }
+  }
+};
 
 // Export Match Model
-export const Match = mongoose.model<IMatch>('Match', MatchSchema);
+export const Match = mongoose.models.Match || mongoose.model<IMatch>('Match', MatchSchema);

@@ -6,3 +6,31 @@
 main svg rect:nth-child(1) {
     fill:transparent !important;
   }
+
+  .brackets {
+    background-color: transparent;
+    font-family: sans-serif;
+  }
+  
+  .brackets path {
+    stroke: #333333;
+  }
+  
+  .brackets text {
+    fill: #333333;
+  }
+  
+  .match {
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .winner {
+    font-weight: bold;
+    color: #2563eb;
+  }
+  
+  .loser {
+    color: #64748b;
+  }
