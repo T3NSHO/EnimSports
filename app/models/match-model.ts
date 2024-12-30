@@ -5,7 +5,7 @@ interface IParticipant {
   id: string; // Store as plain string for flexibility
   name: string;
   isWinner: boolean;
-  status: 'PENDING' | 'PLAYED';
+  status: 'PENDING' | 'PLAYED' | 'IN_PROGRESS'; // had inprogress ra 3ad zdtiha la kan mochkil f compilation d match model !!
   resultText: 'WON' | 'LOST' | 'CHAMPION' | 'RUNNER-UP' | null;
 }
 

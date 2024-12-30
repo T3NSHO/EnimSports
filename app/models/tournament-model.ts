@@ -2,12 +2,10 @@
 import dbconnect from '@/lib/db_connect';
 import mongoose from 'mongoose';
 
-// Enum for tournament types to ensure consistent values
 
-// Enum for tournament formats
 const TournamentFormatEnum = ['league', 'champions'] as const;
 
-// Interface to define the structure of the Tournament document
+
 interface ITournament extends mongoose.Document {
   tournament_name: string;
   tournament_organizer: mongoose.Types.ObjectId;
@@ -17,8 +15,8 @@ interface ITournament extends mongoose.Document {
   end_date: Date;
   max_teams: number;
   tournament_type: string;
-  sport_type?: string; // Only for real-sports
-  esport_game?: string; // Only for esports
+  sport_type?: string;
+  esport_game?: string; 
   tournament_format: string;
   prize?: string;
   registered_teams?: mongoose.Types.ObjectId[];
@@ -27,7 +25,7 @@ interface ITournament extends mongoose.Document {
   updated_at?: Date;
 }
 
-// Mongoose Schema
+
 const TournamentSchema = new mongoose.Schema<ITournament>(
   {
     tournament_name: {
@@ -120,19 +118,19 @@ const TournamentSchema = new mongoose.Schema<ITournament>(
   }
 );
 
-// Middleware to update the updated_at field
+
 TournamentSchema.pre('save', function (next) {
   this.updated_at = new Date();
   next();
 });
 
-// Virtual to check if tournament is full
+
 TournamentSchema.virtual('is_full').get(function () {
   return this.registered_teams && this.registered_teams.length >= this.max_teams;
 });
 
 
-// Create the model
+
 const Tournament =
   mongoose.models.Tournament ||
   mongoose.model<ITournament>('Tournament', TournamentSchema);

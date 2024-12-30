@@ -59,7 +59,7 @@ export function AppSidebar() {
     },
     {
       title: "Results",
-      url: "#",
+      url: "/components/HeroSection/Navbare/OngoingTournments",
       icon: CalendarRange,
     },
   ];

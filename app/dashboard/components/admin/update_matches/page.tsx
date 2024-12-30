@@ -1,9 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Clock, Filter, ChevronDown, Eye } from "lucide-react";
+import { Filter } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface MatchDetails {
-  id: number;
+  _id: string; // MongoDB ObjectId
+  id: number; // Optional local identifier
   team1: string;
   team2: string;
   scoreTeam1: number;
@@ -11,14 +13,12 @@ interface MatchDetails {
   time: string;
   gameType: string;
   status: string;
-  additionalDetails: {
-    [key: string]: string | number | { [key: string]: string | number };
-  };
+  additionalDetails: Record<string, string | number | Record<string, string | number>>;
 }
 
-export default function TournamentTable() {
+export default function TournamentAdminPage() {
+  const { toast } = useToast();
   const [filter, setFilter] = useState<string>("All");
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [selectedMatch, setSelectedMatch] = useState<MatchDetails | null>(null);
   const [scores, setScores] = useState<MatchDetails[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -55,28 +55,67 @@ export default function TournamentTable() {
       ? scores
       : scores.filter((event) => event.gameType === filter);
 
-  const getStatusColor = (status: string): string => {
-    switch (status) {
-      case "Live":
-        return "bg-red-800 text-red-100";
-      case "Finished":
-        return "bg-green-900 text-green-100";
-      default:
-        return "bg-gray-800 text-gray-100";
+  const handleUpdateMatch = async (_id: string, updates: Partial<MatchDetails>) => {
+    try {
+      const response = await fetch(`/api/update_match`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ _id, ...updates }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update match");
+      }
+
+      const updatedMatch = await response.json();
+
+      // Update the scores immutably
+      setScores((prevScores) =>
+        prevScores.map((match) =>
+          match._id === _id ? { ...match, ...updates } : match
+        )
+      );
+
+      setSelectedMatch(null);
+
+      toast({
+        title: "Success",
+        description: "Match updated successfully!",
+        variant: "success",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to update match",
+        variant: "destructive",
+      });
     }
   };
 
   const renderMatchDetailsModal = (): JSX.Element | null => {
     if (!selectedMatch) return null;
 
+    const handleChange = (field: keyof MatchDetails, value: any) => {
+      setSelectedMatch((prev) => (prev ? { ...prev, [field]: value } : prev));
+    };
+
+    const handleSave = () => {
+      if (selectedMatch) {
+        handleUpdateMatch(selectedMatch._id, {
+          status: selectedMatch.status,
+          scoreTeam1: selectedMatch.scoreTeam1,
+          scoreTeam2: selectedMatch.scoreTeam2,
+          time: selectedMatch.time,
+        });
+      }
+    };
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] px-4">
         <div className="bg-gray-800 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-green-500">
-                Match Details
-              </h2>
+              <h2 className="text-2xl font-bold text-green-500">Edit Match</h2>
               <button
                 onClick={() => setSelectedMatch(null)}
                 className="text-gray-400 hover:text-gray-200"
@@ -85,52 +124,59 @@ export default function TournamentTable() {
               </button>
             </div>
 
-            <div className="flex justify-between mb-6">
-              <div className="text-center">
-                <h3 className="text-lg font-semibold text-gray-200">
-                  {selectedMatch.team1}
-                </h3>
-                <p className="text-2xl font-bold text-blue-500">
-                  {selectedMatch.scoreTeam1}
-                </p>
-              </div>
-              <div className="text-center">
-                <h3 className="text-lg font-semibold text-gray-200">
-                  {selectedMatch.team2}
-                </h3>
-                <p className="text-2xl font-bold text-red-500">
-                  {selectedMatch.scoreTeam2}
-                </p>
-              </div>
-            </div>
-
             <div className="space-y-4">
               <div className="bg-gray-700 rounded-lg p-4">
                 <h4 className="text-sm font-semibold text-green-500 mb-2">
                   Match Info
                 </h4>
-                {Object.entries(selectedMatch.additionalDetails).map(
-                  ([key, value]) => (
-                    <div
-                      key={key}
-                      className="flex justify-between text-sm text-gray-200"
-                    >
-                      <span className="capitalize">
-                        {key.replace(/([A-Z])/g, " $1")}
-                      </span>
-                      {typeof value === "object" ? (
-                        Object.entries(value).map(([k, v]) => (
-                          <span key={k} className="capitalize">
-                            {k}: {v}
-                          </span>
-                        ))
-                      ) : (
-                        <span>{value}</span>
-                      )}
-                    </div>
-                  )
-                )}
+                <div className="flex flex-col space-y-2">
+                  <label className="text-gray-200 text-sm">Status</label>
+                  <select
+                    value={selectedMatch.status}
+                    onChange={(e) => handleChange("status", e.target.value)}
+                    className="bg-gray-800 text-gray-200 p-2 rounded-md focus:outline-none"
+                  >
+                    <option value="upcoming">Upcoming</option>
+                    <option value="ongoing">Ongoing</option>
+                    <option value="finished">Finished</option>
+                  </select>
+
+                  <label className="text-gray-200 text-sm">Team 1 Score</label>
+                  <input
+                    type="number"
+                    value={selectedMatch.scoreTeam1}
+                    onChange={(e) =>
+                      handleChange("scoreTeam1", Number(e.target.value))
+                    }
+                    className="bg-gray-800 text-gray-200 p-2 rounded-md focus:outline-none"
+                  />
+
+                  <label className="text-gray-200 text-sm">Team 2 Score</label>
+                  <input
+                    type="number"
+                    value={selectedMatch.scoreTeam2}
+                    onChange={(e) =>
+                      handleChange("scoreTeam2", Number(e.target.value))
+                    }
+                    className="bg-gray-800 text-gray-200 p-2 rounded-md focus:outline-none"
+                  />
+
+                  <label className="text-gray-200 text-sm">Match Time</label>
+                  <input
+                    type="datetime-local"
+                    value={selectedMatch.time}
+                    onChange={(e) => handleChange("time", e.target.value)}
+                    className="bg-gray-800 text-gray-200 p-2 rounded-md focus:outline-none"
+                  />
+                </div>
               </div>
+
+              <button
+                onClick={handleSave}
+                className="w-full bg-blue-700 hover:bg-blue-600 text-white py-2 rounded-lg mt-4"
+              >
+                Save Changes
+              </button>
             </div>
           </div>
         </div>
@@ -148,10 +194,10 @@ export default function TournamentTable() {
 
   return (
     <>
-      <div className="px-5 mt-5 md:px-8 lg:px-40  md:pt-4 text-white min-h-screen pb-4">
+      <div className="px-5 mt-5 md:px-8 lg:px-40 md:pt-4 text-white min-h-screen pb-4">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-8 space-y-4 sm:space-y-0">
-          <h1 className="text-xl  lg:text-2xl font-semibold text-gray-100 w-full sm:text-left">
-            Ongoing Tournament Scoreboard
+          <h1 className="text-xl lg:text-2xl font-semibold text-gray-100 w-full sm:text-left">
+            Tournament Admin Panel
           </h1>
 
           <div className="hidden sm:flex items-center space-x-4">
@@ -174,45 +220,20 @@ export default function TournamentTable() {
               </select>
             </div>
           </div>
-
-          <div className="sm:hidden w-full">
-            <div
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="flex items-center justify-between bg-gray-800 rounded-lg px-4 py-2 cursor-pointer"
-            >
-              <span className="text-gray-100">{filter}</span>
-              <ChevronDown className="text-gray-400" />
-            </div>
-            {isMobileMenuOpen && (
-              <div className="absolute left-0 right-0 mx-4 mt-2 bg-gray-800 rounded-lg shadow-lg z-50">
-                {gameTypes.map((type) => (
-                  <div
-                    key={type}
-                    onClick={() => {
-                      setFilter(type);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="px-4 py-2 hover:bg-gray-700 text-gray-100 cursor-pointer"
-                  >
-                    {type}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
 
-        <div className="grid grid-cols-1  lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredScores.length === 0 && (
             <div className="text-center py-12">
               <p className="text-base sm:text-xl text-gray-500">
-                No events found for this category
+                No matches found for this category
               </p>
             </div>
           )}
-          {filteredScores.map((event, index) => (
+          {filteredScores.map((event) => (
+            console.log(event),
             <div
-              key={`${event.id}-${index}`}
+              key={event._id} // Ensure unique _id as key
               className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden transform transition-all duration-300 hover:shadow-2xl hover:-translate-y-2"
             >
               <div className="flex justify-between items-center p-3 sm:p-4 bg-gray-700">
@@ -220,9 +241,7 @@ export default function TournamentTable() {
                   {event.gameType}
                 </span>
                 <span
-                  className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold ${getStatusColor(
-                    event.status
-                  )}`}
+                  className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold ${event.status}`}
                 >
                   {event.status}
                 </span>
@@ -244,7 +263,7 @@ export default function TournamentTable() {
                   </div>
 
                   <div className="flex flex-col items-center w-1/3">
-                    <p className="text-sm font-bold text-gray-200 mb-1 sm:mb-2 ">
+                    <p className="text-sm font-bold text-gray-200 mb-1 sm:mb-2">
                       {event.team2}
                     </p>
                     <p className="text-xl sm:text-3xl font-extrabold text-red-500">
@@ -253,22 +272,12 @@ export default function TournamentTable() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mt-2 sm:mt-4">
-                  <div className="flex items-center">
-                    <Clock className="text-gray-400 w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                    <span className="text-xs sm:text-sm text-gray-300 font-medium">
-                      Match Time: {event.time}
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={() => setSelectedMatch(event)}
-                    className="flex items-center bg-blue-700 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-xs sm:text-sm transition-colors"
-                  >
-                    <Eye className="w-4 h-4 mr-1" />
-                    See Details
-                  </button>
-                </div>
+                <button
+                  onClick={() => setSelectedMatch(event)} // Trigger state change here
+                  className="w-full bg-green-700 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm sm:text-base"
+                >
+                  Edit Match
+                </button>
               </div>
             </div>
           ))}

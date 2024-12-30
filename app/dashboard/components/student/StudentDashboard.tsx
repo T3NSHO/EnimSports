@@ -1,14 +1,5 @@
 import React from "react";
-import {
-  Bell,
-  User2,
-  Medal,
-  Calendar,
-  ChartPie,
-  MessageCircle,
-  Clock,
-} from "lucide-react";
-import DashboardCard from "../DashboardCard";
+
 
 function StudentDashboard() {
   return (
