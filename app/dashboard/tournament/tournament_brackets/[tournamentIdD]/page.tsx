@@ -109,8 +109,8 @@ const TournamentBracket = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const params = useParams(); // Dynamically fetch params
-  const tournamentIdD = params?.tournamentIDs;
+  const params = useParams() as { tournamentIDs: string }; // Dynamically fetch params
+  const tournamentIdD = params.tournamentIDs;
 
   useEffect(() => {
     setClientReady(true);
