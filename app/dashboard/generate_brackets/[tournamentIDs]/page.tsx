@@ -1,5 +1,5 @@
 // page.tsx
-
+'use client'
 
 interface PageProps {
   params: {
@@ -12,7 +12,7 @@ export async function Page({ params }: PageProps) {
 }
 
 // JoinTeam.tsx
-'use client'
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
