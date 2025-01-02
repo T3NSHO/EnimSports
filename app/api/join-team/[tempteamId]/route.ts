@@ -7,9 +7,13 @@ import { authOptions } from "../../auth/[...nextauth]/authOptions";
 
 
 
-export async function POST(req: NextRequest, { params }: { params: { tempteamId: string } }) {
+export async function POST(req: NextRequest) {
     var ObjectId = require('mongoose').Types.ObjectId; 
-    const { tempteamId } = params; // Access params correctly
+    const { searchParams } = new URL(req.url);
+    const tempteamId = searchParams.get("tempteamId");
+    if (!tempteamId) {
+      return NextResponse.json({ error: 'Team ID is required' }, { status: 400 });
+    }
     
     const teamId = new ObjectId(tempteamId);
     console.log(teamId);

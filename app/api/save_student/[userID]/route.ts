@@ -2,8 +2,10 @@ import { UserModel } from "@/app/models/user-model";
 import dbconnect from "@/lib/db_connect";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest, { params }: { params: { userID: string } }) {
-  const { userID } = params; // Access userID from params
+export async function POST(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const userID = searchParams.get("userID");
+  
   var ObjectId = require('mongoose').Types.ObjectId; 
   const userId = new ObjectId(userID);
 
