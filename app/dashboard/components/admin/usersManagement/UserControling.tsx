@@ -6,20 +6,17 @@ import {
   LucideUserPlus,
   Pen,
   LucideSettings,
-  UserSquare,
-  UserCheck,
-  UserX,
-  UserCog,
   UserRound,
   UsersRound,
+  UserCheck,
+  UserX,
   X,
 } from "lucide-react";
-import { title } from "process";
 
 const statistcsArry = [
-  { title: "numbre of students", number: "20", key: 1, icon: UsersRound },
-  { title: "numbre of Organizer", number: "10", key: 2, icon: UserRound },
-  { title: "numbre of Admin", number: "5", key: 3, icon: UserCog },
+  { title: "number of students", number: "20", key: 1, icon: UsersRound },
+  { title: "number of organizers", number: "10", key: 2, icon: UserRound },
+  { title: "number of admins", number: "5", key: 3, icon: UserCheck },
   { title: "active accounts", number: "91", key: 4, icon: UserCheck },
   { title: "inactive accounts", number: "9", key: 5, icon: UserX },
 ];
@@ -31,21 +28,21 @@ const Statistics: React.FC = () => {
         <div
           key={stat.key}
           className={`bg-gray-800 border-l border-t ${
-            stat.icon == UserX ? "border-red-500 " : "border-emerald-600"
-          }  p-4 sm:p-6 rounded-lg shadow-md flex items-center`}
+            stat.icon === UserX ? "border-red-500 " : "border-emerald-600"
+          } p-4 sm:p-6 rounded-lg shadow-md flex items-center`}
         >
           <div className="mr-4">
             <stat.icon
               className={`${
-                stat.icon == UserX ? "text-red-500 " : "text-green-400 "
-              }w-6 h-6 sm:w-8 sm:h-8`}
+                stat.icon === UserX ? "text-red-500" : "text-green-400"
+              } w-6 h-6 sm:w-8 sm:h-8`}
             />
           </div>
           <div>
             <p className="text-xs sm:text-sm text-gray-400">{stat.title}</p>
             <h2
-              className={`text-xl sm:text-2xl font-semibold  ${
-                stat.icon == UserX ? "text-red-400 " : "text-green-400 "
+              className={`text-xl sm:text-2xl font-semibold ${
+                stat.icon === UserX ? "text-red-400" : "text-green-400"
               }`}
             >
               {stat.number}
@@ -84,27 +81,25 @@ const UserManagement: React.FC = () => {
       status: "Active",
     },
   ]);
+
   const [filterRole, setFilterRole] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddUserForm, setShowAddUserForm] = useState(false);
   const [newUser, setNewUser] = useState({
-    id: null,
+    id: 0,
     name: "",
     email: "",
     role: "Student",
+    school: "Enim",
     status: "Active",
   });
 
-  const handleAddUser = () => {
-    setShowAddUserForm(true);
-  };
+  const handleAddUser = () => setShowAddUserForm(true);
 
   const handleSaveUser = () => {
     if (newUser.id) {
-      // Edit existing user
-      setUsers(users.map((user) => (user.id === newUser.id ? newUser : user)));
+      setUsers(users.map((user) => (user.id === newUser.id ? { ...newUser, id: user.id } : user)));
     } else {
-      // Add new user
       const newUserWithId = {
         ...newUser,
         id: users.length + 1,
@@ -113,20 +108,16 @@ const UserManagement: React.FC = () => {
     }
     setShowAddUserForm(false);
     setNewUser({
-      id: null,
+      id: 0,
       name: "",
       email: "",
       role: "Student",
+      school: "Enim",
       status: "Active",
     });
   };
 
-  const handleAddRole = () => {
-    alert("Add New Role functionality is not yet implemented.");
-    setShowAddUserForm(true);
-  };
-
-  const handleEditUser = (id) => {
+  const handleEditUser = (id: number) => {
     const userToEdit = users.find((user) => user.id === id);
     if (userToEdit) {
       setNewUser(userToEdit);
@@ -134,9 +125,8 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteUser = (id) => {
+  const handleDeleteUser = (id: number) =>
     setUsers(users.filter((user) => user.id !== id));
-  };
 
   const filteredUsers = users.filter(
     (user) =>
@@ -153,7 +143,6 @@ const UserManagement: React.FC = () => {
             <LucideHome size={40} /> User Management
           </h1>
 
-          {/* Filters */}
           <div className="flex flex-wrap items-center gap-4 w-full mt-6">
             <input
               type="text"
@@ -163,7 +152,6 @@ const UserManagement: React.FC = () => {
               className="bg-gray-800 text-white p-3 rounded-md border-none outline-none focus:ring-2 focus:ring-blue-500 flex-1 min-w-0"
             />
             <select
-              title="filter"
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
               className="bg-gray-800 text-white p-3 rounded-md border-none outline-none focus:ring-2 focus:ring-blue-500"
@@ -181,7 +169,6 @@ const UserManagement: React.FC = () => {
             </button>
           </div>
 
-          {/* Add User Form */}
           {showAddUserForm && (
             <div className="bg-gray-800 p-6 rounded-lg shadow-md w-full mt-8">
               <h2 className="text-3xl font-bold text-green-400 mb-4">
@@ -227,7 +214,6 @@ const UserManagement: React.FC = () => {
             </div>
           )}
 
-          {/* User Table */}
           <div className="bg-gray-800 p-6 rounded-lg shadow-md w-full mt-8 overflow-x-auto">
             <table className="table-auto w-full">
               <thead>
@@ -241,60 +227,44 @@ const UserManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
-                    <tr
-                      key={user.id}
-                      className="bg-gray-800 hover:bg-gray-700 transition-colors"
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className="bg-gray-800 hover:bg-gray-700">
+                    <td className="p-4 text-gray-300">{user.name}</td>
+                    <td className="p-4 text-gray-300">{user.email}</td>
+                    <td className="p-4 text-gray-300">{user.role}</td>
+                    <td className="p-4 text-gray-300">{user.school}</td>
+                    <td
+                      className={`p-4 ${
+                        user.status === "Active"
+                          ? "text-green-400"
+                          : "text-red-400"
+                      }`}
                     >
-                      <td className="p-4 text-gray-300 break-all">
-                        {user.name}
-                      </td>
-                      <td className="p-4 text-gray-300 break-all">
-                        {user.email}
-                      </td>
-                      <td className="p-4 text-gray-300">{user.role}</td>
-                      <td className="p-4 text-gray-300">{user.school}</td>
-                      <td
-                        className={`p-4 ${
-                          user.status === "Active"
-                            ? "text-green-400"
-                            : "text-red-400"
-                        }`}
+                      {user.status}
+                    </td>
+                    <td className="p-4 text-gray-300">
+                      <button
+                        onClick={() => handleEditUser(user.id)}
+                        className="px-3 py-1 bg-blue-500 text-white rounded-md"
                       >
-                        {user.status}
-                      </td>
-                      <td className="p-4 text-gray-300 space-y-1">
-                        <button
-                          onClick={() => handleEditUser(user.id)}
-                          className="flex items-center gap-2 px-5 py-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-blue-500/25"
-                        >
-                          <Pen size={16} /> Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all shadow-lg hover:shadow-red-500/25"
-                        >
-                          <X size={16} /> Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="p-4 text-center text-gray-400">
-                      No users found.
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user.id)}
+                        className="px-3 py-1 bg-red-500 text-white rounded-md"
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
-                )}
+                ))}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Role Management Section */}
-        <div className="w-full max-w-full space-y-8 ">
-          <div className="bg-gray-800 p-6  rounded-lg shadow-md w-full">
+        <div className="w-full max-w-full space-y-8">
+          <div className="bg-gray-800 p-6 rounded-lg shadow-md w-full">
             <h2 className="text-3xl font-bold text-green-400 flex items-center gap-4">
               <LucideSettings size={30} /> Role Management
             </h2>
@@ -304,7 +274,7 @@ const UserManagement: React.FC = () => {
               <li>Student: Limited access to personal reservations.</li>
             </ul>
           </div>
-          <div className="w-full max-w-full  bg-gray-800 p-6 rounded-lg shadow-md w-full">
+          <div className="bg-gray-800 p-6 rounded-lg shadow-md w-full">
             <Statistics />
           </div>
         </div>
