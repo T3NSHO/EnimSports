@@ -101,11 +101,16 @@ const transformMatchData = (match: MatchData) => {
   };
 };
 
+interface PageProps {
+  params: {
+    tournamentIdD: string;
+  };
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
 const TournamentBracket = ({
   params,
-}: {
-  params: { tournamentIdD: string };
-}) => {
+}: PageProps) => {
   const [clientReady, setClientReady] = useState(false);
   const [matches, setMatches] = useState<MatchData[]>([]);
   const [loading, setLoading] = useState(true);
