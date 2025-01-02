@@ -2,7 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  ignoreDuringBuilds: true,
+  reactStrictMode: true,
+    eslint: {
+        ignoreDuringBuilds: true,
+    }
 
 };
 
