@@ -3,14 +3,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
-// Define the props interface
-type JoinTeamProps = {
+type PageProps = {
   params: {
     tournamentIDs: string;
   };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
-const JoinTeam = ({ params }: JoinTeamProps) => {
+const JoinTeam = ({ params }: PageProps) => {
   const router = useRouter();
   const { tournamentIDs } = params;
   const [status, setStatus] = useState('Processing...');
