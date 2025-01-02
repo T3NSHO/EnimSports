@@ -7,6 +7,7 @@ import {
   SVGViewer,
 } from "@g-loot/react-tournament-brackets";
 import { useWindowSize } from "@uidotdev/usehooks";
+import { useParams } from "next/navigation"; // Import useParams
 import "../brackets.css";
 
 // Define types for fetched match data
@@ -101,27 +102,21 @@ const transformMatchData = (match: MatchData) => {
   };
 };
 
-interface PageProps {
-  params: {
-    tournamentIdD: string;
-  };
-  searchParams?: { [key: string]: string | string[] | undefined };
-}
-
-const TournamentBracket = ({
-  params,
-}: PageProps) => {
+const TournamentBracket = () => {
   const [clientReady, setClientReady] = useState(false);
   const [matches, setMatches] = useState<MatchData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { tournamentIdD } = params;
+  const params = useParams(); // Dynamically fetch params
+  const tournamentIdD = params?.tournamentIdD;
 
   useEffect(() => {
     setClientReady(true);
 
     const fetchMatches = async () => {
+      if (!tournamentIdD) return;
+
       try {
         const response = await fetch(`/api/get_matches/${tournamentIdD}`, {
           method: "POST",
@@ -179,7 +174,7 @@ const TournamentBracket = ({
   const { width, height } = size;
   const finalWidth = Math.max((width ?? 0) - 500, 500);
   const finalHeight = Math.max((height ?? 0) - 100, 500);
-  
+
   if (!clientReady) return null;
 
   if (loading) {
@@ -189,7 +184,7 @@ const TournamentBracket = ({
       </div>
     );
   }
-  
+
   if (error) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -205,12 +200,10 @@ const TournamentBracket = ({
       </div>
     );
   }
-  const transformed_matches = [transformMatchData(matches[0])];
-  for (let i = 1; i < matches.length; i++) {
-    transformed_matches.push(transformMatchData(matches[i]));
-  }
-const final_matches = add_placeholder(transformed_matches);
-console.log(final_matches);
+
+  const transformed_matches = matches.map(transformMatchData);
+  const final_matches = add_placeholder(transformed_matches);
+  console.log(final_matches);
 
   return (
     <div className="p-5 bg-transparent">
