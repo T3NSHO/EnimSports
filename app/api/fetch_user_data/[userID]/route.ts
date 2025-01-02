@@ -1,27 +1,33 @@
 import { UserModel } from "@/app/models/user-model";
 import dbconnect from "@/lib/db_connect";
-import { NextRequest , NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-import { useSession } from "next-auth/react";
+export async function POST(req: NextRequest) {
+    const { searchParams } = new URL(req.url);
+    const userID = searchParams.get("userID");
 
+    if (!userID) {
+        return NextResponse.json({ error: "User ID not provided" }, { status: 400 });
+    }
 
+    const ObjectId = require('mongoose').Types.ObjectId;
 
+    // Validate the userID format
+    if (!ObjectId.isValid(userID)) {
+        return NextResponse.json({ error: "Invalid User ID format" }, { status: 400 });
+    }
 
-export async function POST(req: NextRequest, { params }: { params: { userID: string } }) {
-    //const { data: session, status } = useSession();
-    var ObjectId = require('mongoose').Types.ObjectId; 
-    const { userID } = params; // Access params correctly
-    
     const userId = new ObjectId(userID);
-    // if (!session || userId != session.user.id) {
-    //    return NextResponse.json({ error: "Unauthorized" }, { status: 404 });
-    // }
+
+    // Connect to the database
     await dbconnect();
+
+    // Find the user
     const user = await UserModel.findOne({ _id: userId });
     if (!user) {
         return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    return NextResponse.json(user , { status: 200 });
 
-
+    // Return the user data
+    return NextResponse.json(user, { status: 200 });
 }
