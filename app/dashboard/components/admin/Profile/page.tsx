@@ -10,11 +10,25 @@ import {
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
-const StudentProfile = () => {
-  const { data: session } = useSession();
+interface Profile {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  school: string;
+}
+
+interface SessionData {
+  user?: {
+    id: string;
+  };
+}
+
+const StudentProfile: React.FC = () => {
+  const { data: session } = useSession() as { data: SessionData };
 
   // Initial state for profile
-  const initialProfile = {
+  const initialProfile: Profile = {
     firstName: "",
     lastName: "",
     phone: "",
@@ -22,10 +36,9 @@ const StudentProfile = () => {
     school: "",
   };
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState(initialProfile);
-
-  let userrole = "user";
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [profile, setProfile] = useState<Profile>(initialProfile);
+  const [userRole, setUserRole] = useState<string>("user");
 
   // Fetch user data and format it to match initialProfile
   useEffect(() => {
@@ -33,12 +46,12 @@ const StudentProfile = () => {
 
     const fetchProfile = async () => {
       try {
-        const response = await fetch(`/api/fetch_user_data/${session.user.id}`, {
+        const response = await fetch(`/api/fetch_user_data/${session?.user?.id}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ userid: session.user.id }),
+          body: JSON.stringify({ userid: session?.user?.id }),
         });
 
         if (!response.ok) {
@@ -46,11 +59,12 @@ const StudentProfile = () => {
         }
 
         const data = await response.json();
-        userrole = data.role;
+        setUserRole(data.role || "user");
+
         // Transform data to match initialProfile structure
-        const formattedProfile = {
-          firstName: data.full_name.split(" ")[0] || "Student",
-          lastName: data.full_name.split(" ")[1] || "User",
+        const formattedProfile: Profile = {
+          firstName: data.full_name?.split(" ")[0] || "Student",
+          lastName: data.full_name?.split(" ")[1] || "User",
           phone: data.phone_number || "",
           email: data.email || "",
           school: data.school || "",
@@ -72,12 +86,12 @@ const StudentProfile = () => {
       email: profile.email,
       phone_number: profile.phone,
       school: profile.school,
-      role: userrole, // Assuming the role is "user" as default
+      role: userRole, // Assuming the role is "user" as default
       team: "", // Assuming team is not provided by the UI
     };
 
     try {
-      const response = await fetch(`/api/save_student/${session?.user.id}`, {
+      const response = await fetch(`/api/save_student/${session?.user?.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -96,7 +110,7 @@ const StudentProfile = () => {
     }
   };
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: keyof Profile, value: string) => {
     setProfile((prev) => ({
       ...prev,
       [field]: value,
@@ -104,8 +118,8 @@ const StudentProfile = () => {
   };
 
   const renderEditableField = (
-    value,
-    onChange,
+    value: string,
+    onChange: (value: string) => void,
     placeholder = "",
     multiline = false
   ) => {
@@ -188,8 +202,8 @@ const StudentProfile = () => {
                       {field.charAt(0).toUpperCase() + field.slice(1)}
                     </label>
                     {renderEditableField(
-                      profile[field],
-                      (value) => handleInputChange(field, value),
+                      profile[field as keyof Profile],
+                      (value) => handleInputChange(field as keyof Profile, value),
                       `Enter ${field}`
                     )}
                   </div>
@@ -210,8 +224,8 @@ const StudentProfile = () => {
                     {field.charAt(0).toUpperCase() + field.slice(1)}
                   </label>
                   {renderEditableField(
-                    profile[field],
-                    (value) => handleInputChange(field, value),
+                    profile[field as keyof Profile],
+                    (value) => handleInputChange(field as keyof Profile, value),
                     `Enter ${field}`
                   )}
                 </div>
