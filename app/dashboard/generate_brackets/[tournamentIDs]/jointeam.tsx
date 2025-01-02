@@ -40,5 +40,4 @@ const JoinTeam = ({ tournamentID }: JoinTeamProps) => {
   );
 }
 
-
 export default JoinTeam;
