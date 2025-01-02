@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Eye,
   Bell,
@@ -7,84 +7,76 @@ import {
   X,
   SortAsc,
   SortDesc,
-  Filter,
   Clock,
 } from "lucide-react";
 
-const StudentNotifications = () => {
-  const [selectedNotification, setSelectedNotification] = useState(null);
-  const [readNotifications, setReadNotifications] = useState([]);
-  const [sortField, setSortField] = useState("time");
-  const [sortDirection, setSortDirection] = useState("desc");
-  const [filterRead, setFilterRead] = useState("all");
+interface Notification {
+  key: string; // This will be _id from the API
+  title: string;
+  message: string; // This will be the description from the API
+  read: boolean;
+  sender: string;
+  senderProfile: {
+    src: string;
+  };
+  time: string; // ISO string for date
+}
 
-  const notifications = [
-    {
-      key: 1,
-      message:
-        "Your football field reservation for the date 10-12-2024 has been saved successfully.",
-      read: false,
-      sender: "Ahmed Ben Ali",
-      senderProfile: {
-        src: `https://ui-avatars.com/api/?name=Ahmed+Ben+Ali&background=random`,
-      },
-      time: "2024-01-15T10:30:00Z",
-      details:
-        "Your reservation for the football field on 10-12-2024 at 5 PM has been confirmed. Please ensure to arrive 15 minutes before the match time.",
-    },
-    {
-      key: 2,
-      message:
-        "Your reservation for the basketball court on 12-12-2024 has been confirmed.",
-      read: false,
-      sender: "Sara El Fassi",
-      senderProfile: {
-        src: `https://ui-avatars.com/api/?name=Sara+El+Fassi&background=random`,
-      },
-      time: "2024-01-16T09:00:00Z",
-      details:
-        "Your reservation for the basketball court on 12-12-2024 at 3 PM is confirmed. Please be there 15 minutes earlier to prepare for the game.",
-    },
-    {
-      key: 3,
-      message:
-        "The registration for the volleyball tournament is now open. Register your team by January 20, 2024.",
-      read: false,
-      sender: "Mohamed Oukal",
-      senderProfile: {
-        src: `https://ui-avatars.com/api/?name=Mohamed+Oukal&background=random`,
-      },
-      time: "2024-01-16T11:30:00Z",
-      details:
-        "The volleyball tournament registration is now open. Please ensure to register your team before January 20, 2024, to participate.",
-    },
-    {
-      key: 4,
-      message:
-        "Your reservation for the tennis court on 15-12-2024 has been successfully confirmed.",
-      read: false,
-      sender: "Imane Boudali",
-      senderProfile: {
-        src: `https://ui-avatars.com/api/?name=Imane+Boudali&background=random`,
-      },
-      time: "2024-01-17T10:00:00Z",
-      details:
-        "Your reservation for the tennis court on 15-12-2024 at 9 AM has been confirmed. Please arrive 15 minutes before the match.",
-    },
-    {
-      key: 5,
-      message:
-        "Reminder: The basketball tournament registration ends in 3 days. Don't miss out!",
-      read: false,
-      sender: "Laila Amine",
-      senderProfile: {
-        src: `https://ui-avatars.com/api/?name=Laila+Amine&background=random`,
-      },
-      time: "2024-01-18T08:00:00Z",
-      details:
-        "The registration for the basketball tournament ends on January 21st. Make sure to register your team before the deadline!",
-    },
-  ];
+const StudentNotifications: React.FC = () => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [readNotifications, setReadNotifications] = useState<string[]>([]);
+  const [sortField, setSortField] = useState<string>("date");
+  const [sortDirection, setSortDirection] = useState<string>("desc");
+  const [filterRead, setFilterRead] = useState<string>("all");
+
+  // Initialize readNotifications from localStorage on the client side
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedReadNotifications = localStorage.getItem("readNotifications");
+      if (storedReadNotifications) {
+        setReadNotifications(JSON.parse(storedReadNotifications));
+      }
+    }
+  }, []);
+
+  // Fetch notifications from API
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch("/api/get_notifications" , {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await response.json();
+        const mappedNotifications: Notification[] = data.map((item: any) => ({
+          key: item._id, // Using _id as the unique key
+          title: item.title,
+          message: item.description, // Using description as the message
+          read: false,
+          sender: "Administrator",
+          senderProfile: {
+            src: `https://ui-avatars.com/api/?name=Administrator&background=random`,
+          },
+          time: item.date,
+        }));
+        setNotifications(mappedNotifications);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
+  // Update localStorage when readNotifications changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("readNotifications", JSON.stringify(readNotifications));
+    }
+  }, [readNotifications]);
 
   // Sorting and Filtering Logic
   const processedNotifications = useMemo(() => {
@@ -93,11 +85,11 @@ const StudentNotifications = () => {
     // Filter by read status
     if (filterRead === "unread") {
       filteredNotifs = filteredNotifs.filter(
-        (n) => !n.read && !readNotifications.includes(n.key)
+        (n) => !readNotifications.includes(n.key)
       );
     } else if (filterRead === "read") {
-      filteredNotifs = filteredNotifs.filter(
-        (n) => n.read || readNotifications.includes(n.key)
+      filteredNotifs = filteredNotifs.filter((n) =>
+        readNotifications.includes(n.key)
       );
     }
 
@@ -105,7 +97,7 @@ const StudentNotifications = () => {
     return [...filteredNotifs].sort((a, b) => {
       let comparison = 0;
       switch (sortField) {
-        case "time":
+        case "date":
           comparison = new Date(b.time).getTime() - new Date(a.time).getTime();
           break;
         case "sender":
@@ -119,26 +111,26 @@ const StudentNotifications = () => {
       }
       return sortDirection === "desc" ? comparison : -comparison;
     });
-  }, [sortField, sortDirection, filterRead, readNotifications]);
+  }, [sortField, sortDirection, filterRead, readNotifications, notifications]);
 
-  const handleSeeDetails = (notification) => {
+  const handleSeeDetails = (notification: Notification) => {
     setSelectedNotification(notification);
   };
 
-  const handleMarkAsRead = (notificationKey) => {
-    setReadNotifications((prev) => [...prev, notificationKey]);
+  const handleMarkAsRead = (notificationKey: string) => {
+    if (!readNotifications.includes(notificationKey)) {
+      setReadNotifications((prev) => [...prev, notificationKey]);
+    }
   };
 
   const handleCloseDetails = () => {
     setSelectedNotification(null);
   };
 
-  const toggleSort = (field) => {
+  const toggleSort = (field: string) => {
     if (sortField === field) {
-      // If already sorting by this field, toggle direction
       setSortDirection((prev) => (prev === "desc" ? "asc" : "desc"));
     } else {
-      // If sorting by a new field, default to descending
       setSortField(field);
       setSortDirection("desc");
     }
@@ -151,7 +143,6 @@ const StudentNotifications = () => {
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Notifications Column */}
         <div className="bg-gray-800 rounded-2xl shadow-2xl p-6 border border-gray-700">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-blue-400 flex items-center">
@@ -159,23 +150,18 @@ const StudentNotifications = () => {
               Notifications
             </h2>
 
-            {/* Sorting and Filtering Controls */}
             <div className="flex items-center space-x-2">
-              {/* Sort Dropdown */}
-              <div className="relative group">
-                <button
-                  className="text-gray-400 hover:text-white transition-colors"
-                  onClick={() => toggleSort("time")}
-                >
-                  {sortField === "time" && sortDirection === "desc" ? (
-                    <SortDesc className="w-5 h-5" />
-                  ) : (
-                    <SortAsc className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
+              <button
+                className="text-gray-400 hover:text-white transition-colors"
+                onClick={() => toggleSort("date")}
+              >
+                {sortField === "date" && sortDirection === "desc" ? (
+                  <SortDesc className="w-5 h-5" />
+                ) : (
+                  <SortAsc className="w-5 h-5" />
+                )}
+              </button>
 
-              {/* Filter Dropdown */}
               <select
                 value={filterRead}
                 onChange={(e) => setFilterRead(e.target.value)}
@@ -197,16 +183,11 @@ const StudentNotifications = () => {
               processedNotifications.map((notification) => (
                 <div
                   key={notification.key}
-                  className={`
-                    flex items-center bg-gray-700 rounded-xl p-4 
-                    ${
-                      readNotifications.includes(notification.key) ||
-                      notification.read
-                        ? "opacity-60"
-                        : "hover:bg-gray-600 hover:shadow-md"
-                    }
-                    transition-all duration-300 ease-in-out
-                  `}
+                  className={`flex items-center bg-gray-700 rounded-xl p-4 ${
+                    readNotifications.includes(notification.key)
+                      ? "opacity-60"
+                      : "hover:bg-gray-600 hover:shadow-md"
+                  } transition-all duration-300 ease-in-out`}
                 >
                   <div className="mr-4">
                     <img
@@ -220,35 +201,35 @@ const StudentNotifications = () => {
                   </div>
 
                   <div className="flex-grow">
+                    <p className="text-sm text-gray-100 mb-1 font-semibold">
+                      {notification.title}
+                    </p>
                     <p className="text-sm text-gray-100 mb-1">
                       {notification.message}
                     </p>
                     <div className="flex items-center text-xs text-gray-500 mb-2">
                       <Clock className="w-3 h-3 mr-1" />
-                      {new Date(notification.time).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {new Date(notification.time).toLocaleDateString(
+                        "en-US",
+                        {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )}
                     </div>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleMarkAsRead(notification.key)}
-                        className="
-                          flex items-center bg-green-700 hover:bg-green-600 
-                          text-white px-3 py-1 rounded-full text-xs 
-                          transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="flex items-center bg-green-700 hover:bg-green-600 text-white px-3 py-1 rounded-full text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
                       >
                         <CheckCircle className="w-4 h-4 mr-1" />
                         Mark as read
                       </button>
                       <button
                         onClick={() => handleSeeDetails(notification)}
-                        className="
-                          flex items-center bg-blue-700 hover:bg-blue-600 
-                          text-white px-3 py-1 rounded-full text-xs 
-                          transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex items-center bg-blue-700 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <Eye className="w-4 h-4 mr-1" />
                         See Details
@@ -261,7 +242,6 @@ const StudentNotifications = () => {
           </div>
         </div>
 
-        {/* Details Column */}
         <div className="bg-gray-800 rounded-2xl shadow-2xl p-6 min-h-[600px] border border-gray-700">
           {selectedNotification ? (
             <div className="relative">
@@ -305,15 +285,15 @@ const StudentNotifications = () => {
                 <div className="bg-gray-700 rounded-xl p-6 shadow-inner">
                   <p className="text-base text-gray-100 mb-4">
                     <strong className="text-blue-400 block mb-2">
-                      Message:
+                      Title:
                     </strong>
-                    {selectedNotification.message}
+                    {selectedNotification.title}
                   </p>
                   <p className="text-base text-gray-300">
                     <strong className="text-blue-400 block mb-2">
-                      Details:
+                      Message:
                     </strong>
-                    {selectedNotification.details}
+                    {selectedNotification.message}
                   </p>
                 </div>
               </div>

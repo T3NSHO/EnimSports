@@ -14,6 +14,7 @@ import {
 } from "@/app/components/ui/sidebar";
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
+import { title } from "process";
 
 // Menu items.
 export function AppSidebar() {
@@ -53,8 +54,8 @@ export function AppSidebar() {
       url: "/dashboard/components/student/Profile",
       icon: UserRoundPen,
     },{
-      title:"gym schedule",
-      url:"/dashboard/components/student/GymTimeTable",
+      title:"Create team",
+      url:"/dashboard/tournament/team_registration",
       icon: Dumbbell,
     },
     {
@@ -80,6 +81,10 @@ export function AppSidebar() {
       url: "/dashboard/components/student/TournamentManagement",
       icon: Trophy,
     },
+     {title : "Create a tournament",
+      url : "/dashboard/components/organizer/createTournament",
+      icon : Calendar
+     },
     {
       title: "Profile",
       url: "/dashboard/components/admin/Profile",

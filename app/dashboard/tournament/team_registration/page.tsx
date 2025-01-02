@@ -58,7 +58,7 @@ const page = () => {
   }
 
   return (
-    <form onSubmit={Register_team} className="max-w-sm mx-auto mt-24">
+    <form onSubmit={Register_team} className="w-3/5 mx-auto mt-24">
       <div className="mb-5">
         <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
           Team Name

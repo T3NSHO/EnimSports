@@ -1,14 +1,35 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
+// Notification Form Component
 const NotificationForm: React.FC = () => {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [audience, setAudience] = useState("All Users");
 
-  const handleSubmit = () => {
-    console.log("Sending notification:", { title, message, audience });
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch("/api/send_notification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title,
+          message,
+          audience,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send notification");
+      }
+
+      console.log("Notification sent successfully");
+    } catch (error) {
+      console.error("Error sending notification:", error);
+    }
   };
 
   return (
@@ -59,24 +80,43 @@ const NotificationForm: React.FC = () => {
   );
 };
 
+// Notifications Table Component
 const NotificationsTable: React.FC = () => {
-  const notifications = [
-    {
-      title: "Event Reminder",
-      audience: "Students",
-      date: "2024-11-20",
-      status: "Delivered",
-    },
-    {
-      title: "System Maintenance",
-      audience: "All Users",
-      date: "2024-11-19",
-      status: "Failed",
-    },
-  ];
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch("/api/get_notifications", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch notifications");
+        }
+
+        const data = await response.json();
+        console.log("Fetched notifications:", data);
+        setNotifications(data || []);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
+  if (loading) {
+    return <p className="text-white">Loading notifications...</p>;
+  }
 
   return (
-    <table className="min-w-full bg-white rounded-lg dark:bg-gray-700 shadow-md">
+    <table className="w-full bg-white rounded-lg dark:bg-gray-700 shadow-md">
       <thead>
         <tr>
           <th className="text-left px-6 py-3 text-gray-900 dark:text-green-400">
@@ -94,36 +134,48 @@ const NotificationsTable: React.FC = () => {
         </tr>
       </thead>
       <tbody>
-        {notifications.map((notification, index) => (
-          <tr key={index}>
-            <td className="px-6 py-4 text-gray-900 dark:text-gray-100">
-              {notification.title}
-            </td>
-            <td className="px-6 py-4 text-gray-900 dark:text-gray-100">
-              {notification.audience}
-            </td>
-            <td className="px-6 py-4 text-gray-900 dark:text-gray-100">
-              {notification.date}
-            </td>
+        {notifications.length > 0 ? (
+          notifications.map((notification) => (
+            <tr key={notification._id}>
+              <td className="px-6 py-4 text-gray-900 dark:text-gray-100">
+                {notification.title || "N/A"}
+              </td>
+              <td className="px-6 py-4 text-gray-900 dark:text-gray-100">
+                {notification.audience || "N/A"}
+              </td>
+              <td className="px-6 py-4 text-gray-900 dark:text-gray-100">
+                {new Date(notification.date).toLocaleString() || "N/A"}
+              </td>
+              <td
+                className={`px-6 py-4 ${
+                  notification.status === "Delivered"
+                    ? "text-green-500"
+                    : "text-red-500"
+                }`}
+              >
+                {notification.status || "N/A"}
+              </td>
+            </tr>
+          ))
+        ) : (
+          <tr>
             <td
-              className={`px-6 py-4 ${
-                notification.status === "Delivered"
-                  ? "text-green-500"
-                  : "text-red-500"
-              }`}
+              colSpan={4}
+              className="px-6 py-4 text-gray-900 dark:text-gray-100 text-center"
             >
-              {notification.status}
+              No notifications available
             </td>
           </tr>
-        ))}
+        )}
       </tbody>
     </table>
   );
 };
 
+// Notifications Page Component
 const NotificationsPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-6">
+    <div className="h-full w-full bg-gray-900 text-white flex items-center justify-center p-6">
       <div className="w-full max-w-6xl">
         <h1 className="text-4xl font-bold text-green-400 text-center mb-8">
           System Notifications Management
@@ -134,7 +186,7 @@ const NotificationsPage: React.FC = () => {
             <NotificationForm />
           </div>
           {/* Notifications Table */}
-          <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+          <div className="w-full bg-gray-800 p-6 rounded-lg shadow-lg">
             <NotificationsTable />
           </div>
         </div>
