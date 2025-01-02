@@ -7,9 +7,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/authOptions";
 
+
 export async function POST(req: NextRequest, { params }: { params: { temptournamentId: string } }) {
     const ObjectId = mongoose.Types.ObjectId;
-    const { temptournamentId } = params;
+    const { searchParams } = new URL(req.url);
+    const temptournamentId = searchParams.get("temptournamentId");
+    if (!temptournamentId) {
+        return NextResponse.json({ error: 'Tournament ID is required' }, { status: 400 });
+    }
     const tournamentId = new ObjectId(temptournamentId);
 
     if (!tournamentId) {
