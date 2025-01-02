@@ -9,7 +9,7 @@ interface JoinTeamProps {
   };
 }
 
-export default function JoinTeam({ params }: JoinTeamProps) {
+export default function JoinTeam({ params }: { params: { tournamentIDs: string } }) {
   const router = useRouter();
   const { tournamentIDs } = params; // Destructure `params` correctly
   const [status, setStatus] = useState('Processing...');
