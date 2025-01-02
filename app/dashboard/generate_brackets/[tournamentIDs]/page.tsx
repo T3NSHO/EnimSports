@@ -3,15 +3,16 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
-interface JoinTeamProps {
+// Define the props interface
+type JoinTeamProps = {
   params: {
     tournamentIDs: string;
   };
 }
 
-export default function JoinTeam({ params }: { params: { tournamentIDs: string } }) {
+const JoinTeam = ({ params }: JoinTeamProps) => {
   const router = useRouter();
-  const { tournamentIDs } = params; // Destructure `params` correctly
+  const { tournamentIDs } = params;
   const [status, setStatus] = useState('Processing...');
 
   useEffect(() => {
@@ -25,7 +26,7 @@ export default function JoinTeam({ params }: { params: { tournamentIDs: string }
         .then((res) => {
           if (res.ok) {
             setStatus('Success! You have created the brackets.');
-            setTimeout(() => router.push('/dashboard'), 3000); // Redirect after 3 seconds
+            setTimeout(() => router.push('/dashboard'), 3000);
           } else {
             res.text().then((text) => setStatus(JSON.parse(text).error));
           }
@@ -42,3 +43,5 @@ export default function JoinTeam({ params }: { params: { tournamentIDs: string }
     </div>
   );
 }
+
+export default JoinTeam;
