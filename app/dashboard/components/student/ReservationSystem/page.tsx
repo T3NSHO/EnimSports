@@ -373,7 +373,7 @@ const ReservationSystem: FC = () => {
                           ? "cursor-not-allowed opacity-50"
                           : ""
                       }`}
-                      disable={reservedBy && reservedBy !== CURRENT_USER}
+                      disabled={!!reservedBy && reservedBy !== CURRENT_USER}
                     >
                       {hourState ? (
                         <div className="flex items-center justify-center gap-1">
@@ -429,11 +429,7 @@ const ReservationSystem: FC = () => {
                         <span className="font-semibold">Reserved By:</span>
                         {selectedReservationDetails.reservedBy}
                       </p>
-                      <p className="flex items-center gap-2">
-                        <User size={16} />
-                        <span className="font-semibold">Email:</span>
-                        {selectedReservationDetails.email}
-                      </p>
+                      
                       {selectedReservationDetails.phone && (
                         <p className="flex items-center gap-2">
                           <User size={16} />

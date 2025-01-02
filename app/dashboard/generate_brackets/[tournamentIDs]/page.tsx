@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
-export default function JoinTeam({ params }: { params: Promise<{ tournamentIDs: string }> }) {
+export default function JoinTeam({ params }: { params: { tournamentIDs: string } }) {
     const router = useRouter();
-    const { tournamentIDs } = React.use(params); // Unwrapping params with React.use()
+    const { tournamentIDs } = params; // Directly destructuring params
     const [status, setStatus] = useState('Processing...');
 
     useEffect(() => {

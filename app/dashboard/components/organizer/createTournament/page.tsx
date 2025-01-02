@@ -43,10 +43,21 @@ const TournamentCreationForm = () => {
   const tournament_organizer = session.user.id as string;
 
   // Handle form submission
-  const handleSubmit = async (e) => {
+  interface TournamentData {
+    title: string;
+    prize: string;
+    startDate: string;
+    type: string;
+    sportDetails: string;
+    numberOfTeams: number;
+    format: string;
+    tournament_organizer: string;
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Validate form data
-    const tournamentData = {
+    const tournamentData: TournamentData = {
       title: tournamentTitle,
       prize: tournamentPrize,
       startDate,
@@ -67,23 +78,23 @@ const TournamentCreationForm = () => {
         body: JSON.stringify(tournamentData),
       });
 
-     if (response.status === 201) {
-           toast({
-             variant: "success",
-             title: "Tournament created successfully",
-             description: "You will be redirected to the Dashboard page",
-           });
-           delay(1500);
-           router.push("/dashboard");
-         } 
-        } catch (error) {
-          console.error("Tournament creation error:", error);
-          toast({
-            variant: "destructive",
-            title: "Uh oh! Something went wrong.",
-            description: "Tournament not created successfully : " + error,
-          });
-        }
+      if (response.status === 201) {
+        toast({
+          variant: "success",
+          title: "Tournament created successfully",
+          description: "You will be redirected to the Dashboard page",
+        });
+        delay(1500);
+        router.push("/dashboard");
+      } 
+    } catch (error) {
+      console.error("Tournament creation error:", error);
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: "Tournament not created successfully : " + error,
+      });
+    }
   };
 
   return (
