@@ -19,6 +19,7 @@ interface Participant {
   resultText: "WON" | "LOST" | "CHAMPION" | "RUNNER-UP" | null;
 }
 
+
 interface MatchData {
   id: number;
   name: string;
@@ -109,7 +110,7 @@ const TournamentBracket = () => {
   const [error, setError] = useState<string | null>(null);
 
   const params = useParams(); // Dynamically fetch params
-  const tournamentIdD = params?.tournamentIdD;
+  const tournamentIdD = params?.tournamentIDs;
 
   useEffect(() => {
     setClientReady(true);
@@ -213,7 +214,7 @@ const TournamentBracket = () => {
       <SingleEliminationBracket
         matches={final_matches}
         matchComponent={Match}
-        svgWrapper={({ children, ...props }) => (
+        svgWrapper={({ children, ...props }: { children: React.ReactNode; [key: string]: any }) => (
           <SVGViewer
             width={finalWidth}
             height={finalHeight}
