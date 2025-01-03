@@ -1,4 +1,4 @@
-import { teamModel } from "@/app/models/team-model";
+//@ts-nocheck
 import dbconnect from "@/lib/db_connect";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";

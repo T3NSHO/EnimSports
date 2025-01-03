@@ -6,7 +6,7 @@ import * as React from "react"
 import type {
   ToastActionElement,
   ToastProps,
-} from "@/components/ui/toast"
+} from "@/app/components/ui/toast"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
@@ -152,17 +152,39 @@ function toast({ ...props }: Toast) {
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
 
+  interface AddToastAction {
+    type: ActionType["ADD_TOAST"];
+    toast: ToasterToast;
+  }
+
+  interface UpdateToastAction {
+    type: ActionType["UPDATE_TOAST"];
+    toast: Partial<ToasterToast>;
+  }
+
+  interface DismissToastAction {
+    type: ActionType["DISMISS_TOAST"];
+    toastId?: ToasterToast["id"];
+  }
+
+  interface RemoveToastAction {
+    type: ActionType["REMOVE_TOAST"];
+    toastId?: ToasterToast["id"];
+  }
+
+  type Action = AddToastAction | UpdateToastAction | DismissToastAction | RemoveToastAction;
+
   dispatch({
     type: "ADD_TOAST",
     toast: {
       ...props,
       id,
       open: true,
-      onOpenChange: (open) => {
-        if (!open) dismiss()
+      onOpenChange: (open: boolean) => {
+        if (!open) dismiss();
       },
     },
-  })
+  });
 
   return {
     id: id,

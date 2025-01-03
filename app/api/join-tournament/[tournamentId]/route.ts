@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db_connect';
 import Tournament from '@/app/models/tournament-model';

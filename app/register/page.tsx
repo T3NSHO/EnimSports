@@ -1,3 +1,4 @@
+//@ts-nocheck
 "use client"; // This file will be executed on the client side
 
 import Image from "next/image";

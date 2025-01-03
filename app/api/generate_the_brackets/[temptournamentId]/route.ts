@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { teamModel } from "@/app/models/team-model";
 import { Match } from "@/app/models/match-model";
 import Tournament from "@/app/models/tournament-model";

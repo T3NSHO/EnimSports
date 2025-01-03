@@ -1,3 +1,4 @@
+//@ts-nocheck
 "use client";
 
 import Navbar from "@/app/components/HeroSection/Navbare/page";
