@@ -130,8 +130,8 @@ const ReservationSystem: FC = () => {
     setSelectedField(field);
     setSelectedReservationDetails(null);
   };
-  if (!session){
-    return 'you are not allowed to see this page';
+  if (!session) {
+    return <div>You are not allowed to see this page</div>;
   }
 
   const user_id = session.user.id as string;
