@@ -48,9 +48,6 @@ interface ReservationsState {
   reservedHours: number[];
 }
 
-// Constants
-
-const CURRENT_USER = "AZEMRAY"; // Typically from authentication
 
 const fieldTypes: FieldType[] = [
   {
@@ -135,7 +132,7 @@ const ReservationSystem: FC = () => {
   }
 
   const user_id = session.user.id as string;
-  
+  const CURRENT_USER = session.user.full_name;
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const selectedDateValue = e.target.value;
     setSelectedDate(selectedDateValue);

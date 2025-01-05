@@ -8,9 +8,9 @@ import { authOptions } from "../../auth/[...nextauth]/authOptions";
 
 
 
-export async function POST(req: NextRequest, {params} : {params: {tournamentId: string}}) {
+export async function POST(req: NextRequest , params : {params: {tempteamtId: string}}) {
     var ObjectId = require('mongoose').Types.ObjectId; 
-    const { tempteamId } = params;
+    const { tempteamId } = await params;
     if (!tempteamId) {
       return NextResponse.json({ error: 'Team ID is required' }, { status: 400 });
     }

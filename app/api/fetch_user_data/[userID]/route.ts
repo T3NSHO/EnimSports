@@ -1,23 +1,24 @@
+//@ts-nocheck
+
 import { UserModel } from "@/app/models/user-model";
 import dbconnect from "@/lib/db_connect";
 import { NextRequest, NextResponse } from "next/server";
+import { Types } from "mongoose";
 
-export async function POST(req: NextRequest, {params} : {params: {userID: string}}) {
-    const {userID} = params;
-
+export async function POST(req: NextRequest,{params}: { params: { userID: string } }) {
+    var ObjectId = require('mongoose').Types.ObjectId;
+    const { userID } = await params;
 
     if (!userID) {
         return NextResponse.json({ error: "User ID not provided" }, { status: 400 });
     }
 
-    const ObjectId = require('mongoose').Types.ObjectId;
-
     // Validate the userID format
-    if (!ObjectId.isValid(userID)) {
+    if (!Types.ObjectId.isValid(userID)) {
         return NextResponse.json({ error: "Invalid User ID format" }, { status: 400 });
     }
 
-    const userId = new ObjectId(userID);
+    const userId = new Types.ObjectId(userID);
 
     // Connect to the database
     await dbconnect();
