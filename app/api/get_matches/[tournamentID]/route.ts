@@ -5,14 +5,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/authOptions";
 import { Match } from "@/app/models/match-model";
 
-export async function POST(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
+export async function POST(req: NextRequest, {params} : {params: {tournamentID: string}}) {
+  
 
   const ObjectId = require("mongoose").Types.ObjectId;
 
   // Await the params to ensure correct access
   
-  const tournamentID = searchParams.get("tournamentID");
+  const { tournamentID } = params;
 
   if (!tournamentID || !ObjectId.isValid(tournamentID)) {
     return NextResponse.json({ error: "Invalid tournament ID" }, { status: 400 });

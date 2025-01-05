@@ -6,10 +6,9 @@ import {teamModel} from '@/app/models/team-model';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/authOptions';
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest , {params} : {params: {tournamentId: string}}) {
   var ObjectId = require('mongoose').Types.ObjectId; 
-  const { searchParams } = new URL(req.url);
-  const tournamentId = searchParams.get('tournamentId');
+  const { tournamentId } = params;
   if (!tournamentId) {
     return NextResponse.json({ error: 'Tournament ID is required' }, { status: 400 });
   }
