@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarSearch,Calendar, Home, Inbox, Search, Settings, LogOut , CalendarRange, Trophy, LandPlot, Dumbbell ,UserRoundPen ,UserRoundCog, ClipboardPlus}  from "lucide-react";
+import { CalendarSearch,Calendar, Home, Inbox, Search, Settings, LogOut , CalendarRange, Trophy, LandPlot, Dumbbell ,UserRoundPen ,UserRoundCog, ClipboardPlus, PencilLine}  from "lucide-react";
 
 import {
   Sidebar,
@@ -98,6 +98,11 @@ export function AppSidebar() {
       title: "Facility Reports",
       url: "/dashboard/components/admin/reports",
       icon: ClipboardPlus,
+    },
+    {
+      title: "Update Scores",
+      url: "/dashboard/components/admin/update_matches",
+      icon: PencilLine,
     }
   ];
 
