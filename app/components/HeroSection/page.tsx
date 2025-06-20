@@ -1,8 +1,11 @@
 "use client";
 import React from "react";
 import * as Svg from "@/public/svg.js";
+import { useRouter } from 'next/navigation';
+
 
 function HeroSection() {
+  const router = useRouter();
   const features = [
     "Simple and quick scheduling",
     "Beautiful live and continuous display",
@@ -50,7 +53,7 @@ function HeroSection() {
             </div>
             <h2 className="text-2xl font-bold mb-5">
               Schedule your <br /> next future{" "}
-              <span className="text-blue-500">KOOORA</span> <br /> tournament
+              <span className="text-blue-500">SPORTS</span> <br /> tournament
               with <span className="text-blue-500">ENIMSPORTS</span>
             </h2>
 
@@ -62,7 +65,9 @@ function HeroSection() {
                 </div>
               ))}
             </div>
-            <button className="btn bg-blue-600 hover:bg-blue-700 hover:text-gray-200 text-white py-2 px-4 rounded-lg flex items-center">
+            <button className="btn bg-blue-600 hover:bg-blue-700 hover:text-gray-200 text-white py-2 px-4 rounded-lg flex items-center" onClick={() => {
+              router.push('/login');
+            }}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"

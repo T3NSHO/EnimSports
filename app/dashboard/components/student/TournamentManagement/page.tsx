@@ -21,7 +21,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import { useSession } from 'next-auth/react';
+
 export default function TournamentsPage() {
+  const { data: session, status } = useSession();
   const [tournaments, setTournaments] = useState({ ongoing: [], upcoming: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [openOngoing, setOpenOngoing] = useState<string | null>(null);
@@ -29,6 +32,7 @@ export default function TournamentsPage() {
   const [showOngoing, setShowOngoing] = useState(true);
   const [teamNames, setTeamNames] = useState<{ [key: string]: string }>({});
   const processingRef = useRef(false);
+  const [matchStatus, setMatchStatus] = useState<{ [key: string]: boolean }>({});
 
   // Fetch tournaments
   useEffect(() => {
@@ -67,6 +71,18 @@ export default function TournamentsPage() {
           
           setTeamNames(teamNameMap);
         }
+
+        // Fetch match status for each tournament
+        const allTournaments = [...ongoing, ...upcoming];
+        const matchStatusObj: { [key: string]: boolean } = {};
+        await Promise.all(
+          allTournaments.map(async (t: any) => {
+            const res = await fetch(`/api/get_matches/${t._id}`, { method: 'POST' });
+            const matchData = await res.json();
+            matchStatusObj[t._id] = Array.isArray(matchData.matches) && matchData.matches.length > 0;
+          })
+        );
+        setMatchStatus(matchStatusObj);
       } catch (error) {
         console.error("Error fetching tournaments or team names:", error);
       } finally {
@@ -82,6 +98,24 @@ export default function TournamentsPage() {
     return teamIds.length > 0
       ? teamIds.map((id) => teamNames[id] || "Unknown Team").join(", ")
       : "No teams registered";
+  };
+
+  const handleGenerateBracket = async (tournamentId: string) => {
+    try {
+      const res = await fetch(`/api/generate_the_brackets/${tournamentId}`, { method: 'POST' });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || 'Failed to generate bracket');
+      } else {
+        alert('Bracket generated successfully!');
+        // Refresh match status
+        const matchRes = await fetch(`/api/get_matches/${tournamentId}`, { method: 'POST' });
+        const matchData = await matchRes.json();
+        setMatchStatus((prev) => ({ ...prev, [tournamentId]: Array.isArray(matchData.matches) && matchData.matches.length > 0 }));
+      }
+    } catch (err) {
+      alert('Error generating bracket');
+    }
   };
 
   if (isLoading) {
@@ -153,10 +187,20 @@ export default function TournamentsPage() {
                           <p className="mt-2">
                             <strong>Teams:</strong> {getTeamNames(tournament.registered_teams)}
                           </p>
-                          <a href={`/dashboard/generate_brackets/${tournament._id}`}>
-                          <button className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-md w-full hover:bg-blue-600">
-                            See brackets
-                          </button>
+                          {/* Admin-only Generate Bracket button if not generated */}
+                          {session?.user?.role === 'admin' && !matchStatus[tournament._id] && (
+                            <button
+                              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-md w-full hover:bg-blue-700"
+                              onClick={() => handleGenerateBracket(tournament._id)}
+                            >
+                              Generate Bracket
+                            </button> 
+                          )}
+                          {/* Always show See Brackets button */}
+                          <a href={`/dashboard/tournament/tournament_brackets/${tournament._id}`}>
+                            <button className={`mt-4 px-6 py-2 w-full rounded-md ${matchStatus[tournament._id] ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-500 text-white'}`}>
+                              See brackets
+                            </button>
                           </a>
                         </DialogHeader>
                       </DialogContent>

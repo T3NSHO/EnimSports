@@ -43,11 +43,8 @@ export async function POST(req: NextRequest, {params}: { params: { tournamentID:
     }
 
     // Fetch all matches for the given tournament
-const matches = await Match.find({ tournamentId: tournament_ID })
-.populate({
-  path: 'participants.id',
-  model: 'Teams', // Reference the correct model
-}).lean({ virtuals: true }); // Populate participant references if needed
+    const matches = await Match.find({ tournamentId: tournament_ID })
+      .lean({ virtuals: true }); // Populate participant references if needed
   
 
     console.log(matches);

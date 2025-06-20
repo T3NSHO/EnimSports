@@ -34,6 +34,8 @@ const TournamentCreationForm = () => {
   const [esportGame, setEsportGame] = useState("");
   const [numberOfTeams, setNumberOfTeams] = useState(2);
   const [tournamentFormat, setTournamentFormat] = useState("");
+  const [joinLink, setJoinLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState<boolean>(false);
   if (status === "loading") {
     return <p>Loading...</p>;
   }
@@ -70,7 +72,6 @@ const TournamentCreationForm = () => {
     };
     
     try {
-      // Example of potential API call in Next.js
       const response = await fetch("/api/register_tournament", {
         method: "POST",
         headers: {
@@ -78,16 +79,20 @@ const TournamentCreationForm = () => {
         },
         body: JSON.stringify(tournamentData),
       });
-
       if (response.status === 201) {
+        const data = await response.json();
+        const tournamentId: string = data.tournamentId; // adjust if your API returns a different key
+        const link = `${window.location.origin}/dashboard/tournament/join_tournament/${tournamentId}`;
+        setJoinLink(link);
         toast({
           variant: "success",
           title: "Tournament created successfully",
-          description: "You will be redirected to the Dashboard page",
+          description: "You can now share the join link!",
         });
-        delay(1500);
-        router.push("/dashboard");
-      } 
+        // Optionally redirect after a delay
+        // delay(1500);
+        // router.push("/dashboard");
+      }
     } catch (error) {
       console.error("Tournament creation error:", error);
       toast({
@@ -370,6 +375,29 @@ const TournamentCreationForm = () => {
               <Trophy className="mr-2" /> Create Tournament
             </button>
           </form>
+          {joinLink && (
+            <div className="mt-6 flex flex-col items-center">
+              <div className="mb-2 text-green-400 font-semibold">Share this link to let others join:</div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={joinLink}
+                  readOnly
+                  className="bg-gray-700 border border-gray-600 text-white rounded px-2 py-1 w-96"
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(joinLink);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

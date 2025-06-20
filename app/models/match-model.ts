@@ -17,7 +17,7 @@ export interface IMatch extends Document {
   nextMatchId: number | null;
   tournamentRoundText: string;
   startTime: string;
-  state: 'PENDING' | 'IN_PROGRESS' | 'DONE';
+  state: 'PENDING' | 'IN_PROGRESS' | 'DONE' | 'PLAYED';
   participants: IParticipant[];
   team1Score?: number;
   team2Score?: number;
@@ -38,7 +38,7 @@ const MatchSchema = new Schema<IMatch>(
     startTime: { type: String, required: true },
     state: {
       type: String,
-      enum: ['PENDING', 'IN_PROGRESS', 'DONE'],
+      enum: ['PENDING', 'IN_PROGRESS', 'DONE', 'PLAYED'],
       default: 'PENDING',
       required: true,
     },
@@ -50,7 +50,7 @@ const MatchSchema = new Schema<IMatch>(
           isWinner: { type: Boolean, default: false },
           status: {
             type: String,
-            enum: ['PENDING', 'PLAYED'],
+            enum: ['PENDING', 'PLAYED', 'IN_PROGRESS'],
             default: 'PENDING',
           },
           resultText: {
