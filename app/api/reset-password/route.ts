@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db_connect from '@/lib/db_connect';
 import { UserModel } from '@/app/models/user-model';
 import { PasswordResetModel } from '@/app/models/password-reset-model';
+import bcrypt from 'bcrypt';
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
@@ -46,7 +47,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    user.password = newPassword;
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
     await user.save();
 
     // Mark token as used
