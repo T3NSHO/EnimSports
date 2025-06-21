@@ -6,4 +6,5 @@ export interface User {
   team?: string;
   school?: string;
   phone_number?: string;
+  status: 'active' | 'inactive';
 }

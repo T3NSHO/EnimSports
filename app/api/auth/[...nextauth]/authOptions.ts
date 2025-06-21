@@ -3,6 +3,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import db_connect from "@/lib/db_connect";
 import { getoneuser } from "../../../queries/getuser-data";
 import { User } from "@/app/types/User";
+import { UserModel } from "@/app/models/user-model";
+import * as bcrypt from 'bcrypt';
 
 
 
@@ -28,18 +30,25 @@ export const authOptions: NextAuthOptions = {
               throw new Error("Email and password are required");
             }
             await db_connect();
-            const user = await getoneuser(credentials.email);
+            const user = await UserModel.findOne({ email: credentials.email });
         
-            if (user && user.password === credentials.password) {
-              return {
-                id: user._id.toString(),
-                full_name: user.full_name,
-                email: user.email,
-                role: user.role,
-                team: user.team,
-                school: user.school,
-                phone_number: user.phone_number,
-              };
+            if (user) {
+              const isPasswordMatch = await bcrypt.compare(credentials.password, user.password);
+              if (isPasswordMatch) {
+                if (user.status === 'inactive') {
+                  throw new Error("the account is disabled u should contact the administrator");
+                }
+                return {
+                  id: user._id.toString(),
+                  full_name: user.full_name,
+                  email: user.email,
+                  role: user.role,
+                  team: user.team,
+                  school: user.school,
+                  phone_number: user.phone_number,
+                  status: user.status,
+                };
+              }
             }
         
             throw new Error("Invalid email or password");
@@ -61,6 +70,7 @@ export const authOptions: NextAuthOptions = {
           token.team = user.team;
           token.school = user.school;
           token.phone_number = user.phone_number;
+          token.status = user.status;
         }
         return token;
       },
@@ -73,6 +83,7 @@ export const authOptions: NextAuthOptions = {
           team: token.team as string | undefined,
           school: token.school as string | undefined,
           phone_number: token.phone_number as string | undefined,
+          status: token.status as 'active' | 'inactive',
         };
         return session;
       },

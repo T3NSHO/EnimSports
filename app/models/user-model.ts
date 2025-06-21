@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
     team: String,
     school: String,
     phone_number : String,
+    status: { type: String, enum: ['active', 'inactive'], default: 'active' }
     });
 
 

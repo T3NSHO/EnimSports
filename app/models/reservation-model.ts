@@ -4,9 +4,10 @@ import mongoose, { Schema, model, Document } from 'mongoose';
 export interface ReservationDocument extends Document {
   date: Date;
   field: string;
-  hour: { type: Number, required: true },
-  reservedBy: { type: String, required: true }
+  hour: number;
+  reservedBy: mongoose.Schema.Types.ObjectId;
   reservedAt: Date;
+  status: string;
 }
 
 const reservationSchema = new Schema<ReservationDocument>({
@@ -18,8 +19,8 @@ const reservationSchema = new Schema<ReservationDocument>({
   },
   reservedAt: { type: Date, default: Date.now },
   hour : { type: Number, required: true },
-  reservedBy : { type: String, required: true }
-
+  reservedBy : { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  status: { type: String, enum: ['confirmed', 'cancelled'], default: 'confirmed' }
 });
 
 export const Reservation = mongoose.models.Reservation || model<ReservationDocument>('Reservation', reservationSchema);

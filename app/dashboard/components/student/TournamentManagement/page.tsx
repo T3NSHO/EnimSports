@@ -187,6 +187,14 @@ export default function TournamentsPage() {
                           <p className="mt-2">
                             <strong>Teams:</strong> {getTeamNames(tournament.registered_teams)}
                           </p>
+                          {/* Admin-only Edit Tournament button */}
+                          {session?.user?.role === 'admin' && (
+                            <a href={`/dashboard/tournament/edit_tournament/${tournament._id}`}>
+                              <button className="mt-4 px-6 py-2 bg-yellow-500 text-white rounded-md w-full hover:bg-yellow-600">
+                                Edit Tournament
+                              </button>
+                            </a>
+                          )}
                           {/* Admin-only Generate Bracket button if not generated */}
                           {session?.user?.role === 'admin' && !matchStatus[tournament._id] && (
                             <button
@@ -254,6 +262,13 @@ export default function TournamentsPage() {
                           <p className="mt-2">
                             <strong>Teams:</strong> {getTeamNames(tournament.registered_teams)}
                           </p>
+                          {session?.user?.role === 'admin' && (
+                            <a href={`/dashboard/tournament/edit_tournament/${tournament._id}`}>
+                              <button className="mt-4 px-6 py-2 bg-yellow-500 text-white rounded-md w-full hover:bg-yellow-600">
+                                Edit Tournament
+                              </button>
+                            </a>
+                          )}
                           <a href={`/dashboard/tournament/join_tournament/${tournament._id}`}>
                             <button className="mt-4 px-6 py-2 bg-green-500 text-white rounded-md w-full hover:bg-green-600">
                               Join Tournament

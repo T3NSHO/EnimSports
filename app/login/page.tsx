@@ -38,11 +38,19 @@ export default function Home() {
         await delay(1500);
         router.push("/dashboard");
       } else {
-        toast({
-          variant: "destructive",
-          title: "Uh oh! Something went wrong.",
-          description: "The email or password you entered is incorrect.",
-        });
+        if (response.error === "the account is disabled u should contact the administrator") {
+          toast({
+            variant: "destructive",
+            title: "Account Disabled",
+            description: "Your account has been disabled. Please contact an administrator.",
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "The email or password you entered is incorrect.",
+          });
+        }
       }
     } catch (error) {
       console.log(error);
