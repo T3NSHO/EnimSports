@@ -7,6 +7,9 @@ import {
   Save,
   X,
   School,
+  Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -16,6 +19,12 @@ interface Profile {
   phone: string;
   email: string;
   school: string;
+}
+
+interface PasswordChange {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 interface SessionData {
@@ -36,9 +45,23 @@ const StudentProfile: React.FC = () => {
     school: "",
   };
 
+  const initialPasswordChange: PasswordChange = {
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  };
+
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [isChangingPassword, setIsChangingPassword] = useState<boolean>(false);
   const [profile, setProfile] = useState<Profile>(initialProfile);
+  const [passwordChange, setPasswordChange] = useState<PasswordChange>(initialPasswordChange);
   const [userRole, setUserRole] = useState<string>("user");
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+  const [passwordError, setPasswordError] = useState<string>("");
 
   // Fetch user data and format it to match initialProfile
   useEffect(() => {
@@ -110,11 +133,61 @@ const StudentProfile: React.FC = () => {
     }
   };
 
+  const handlePasswordChange = async () => {
+    // Reset error
+    setPasswordError("");
+
+    // Validate passwords
+    if (passwordChange.newPassword !== passwordChange.confirmPassword) {
+      setPasswordError("New passwords do not match");
+      return;
+    }
+
+    if (passwordChange.newPassword.length < 6) {
+      setPasswordError("New password must be at least 6 characters long");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/update_user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _id: session?.user?.id,
+          password: passwordChange.newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update password");
+      }
+
+      console.log("Password updated successfully");
+      setPasswordChange(initialPasswordChange);
+      setIsChangingPassword(false);
+      setShowPasswords({ current: false, new: false, confirm: false });
+    } catch (error) {
+      console.error("Error updating password:", error);
+      setPasswordError("Failed to update password. Please try again.");
+    }
+  };
+
   const handleInputChange = (field: keyof Profile, value: string) => {
     setProfile((prev) => ({
       ...prev,
       [field]: value,
     }));
+  };
+
+  const handlePasswordInputChange = (field: keyof PasswordChange, value: string) => {
+    setPasswordChange((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    // Clear error when user starts typing
+    if (passwordError) setPasswordError("");
   };
 
   const renderEditableField = (
@@ -145,6 +218,32 @@ const StudentProfile: React.FC = () => {
         placeholder={placeholder}
         className="bg-gray-800/50 border border-gray-600/50 rounded-lg p-2 text-gray-100 w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
       />
+    );
+  };
+
+  const renderPasswordField = (
+    value: string,
+    onChange: (value: string) => void,
+    placeholder: string,
+    field: 'current' | 'new' | 'confirm'
+  ) => {
+    return (
+      <div className="relative">
+        <input
+          type={showPasswords[field] ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="bg-gray-800/50 border border-gray-600/50 rounded-lg p-2 text-gray-100 w-full pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+        />
+        <button
+          type="button"
+          onClick={() => setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }))}
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200"
+        >
+          {showPasswords[field] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        </button>
+      </div>
     );
   };
 
@@ -230,6 +329,95 @@ const StudentProfile: React.FC = () => {
                   )}
                 </div>
               ))}
+            </div>
+
+            {/* Password Change Section */}
+            <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700/50 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-100 flex items-center gap-2">
+                  <Lock className="w-5 h-5" />
+                  Change Password
+                </h3>
+                {!isChangingPassword && (
+                  <button
+                    onClick={() => setIsChangingPassword(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all shadow-lg hover:shadow-purple-500/25 text-sm"
+                  >
+                    <Lock className="w-4 h-4" />
+                    Change
+                  </button>
+                )}
+              </div>
+
+              {isChangingPassword ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-400 mb-1 block">
+                      Current Password
+                    </label>
+                    {renderPasswordField(
+                      passwordChange.currentPassword,
+                      (value) => handlePasswordInputChange('currentPassword', value),
+                      "Enter current password",
+                      'current'
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-400 mb-1 block">
+                      New Password
+                    </label>
+                    {renderPasswordField(
+                      passwordChange.newPassword,
+                      (value) => handlePasswordInputChange('newPassword', value),
+                      "Enter new password",
+                      'new'
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-400 mb-1 block">
+                      Confirm New Password
+                    </label>
+                    {renderPasswordField(
+                      passwordChange.confirmPassword,
+                      (value) => handlePasswordInputChange('confirmPassword', value),
+                      "Confirm new password",
+                      'confirm'
+                    )}
+                  </div>
+
+                  {passwordError && (
+                    <div className="text-red-400 text-sm bg-red-900/20 border border-red-500/30 rounded-lg p-3">
+                      {passwordError}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={handlePasswordChange}
+                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all shadow-lg hover:shadow-green-500/25"
+                    >
+                      <Save className="w-4 h-4" />
+                      Update Password
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsChangingPassword(false);
+                        setPasswordChange(initialPasswordChange);
+                        setPasswordError("");
+                        setShowPasswords({ current: false, new: false, confirm: false });
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all shadow-lg hover:shadow-gray-500/25"
+                    >
+                      <X className="w-4 h-4" />
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm">
+                  Click the button above to change your password
+                </p>
+              )}
             </div>
           </div>
         </div>

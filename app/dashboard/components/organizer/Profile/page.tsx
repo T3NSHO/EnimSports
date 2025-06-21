@@ -33,7 +33,7 @@ interface SessionData {
   };
 }
 
-const StudentProfile: React.FC = () => {
+const OrganizerProfile: React.FC = () => {
   const { data: session } = useSession() as { data: SessionData };
 
   // Initial state for profile
@@ -86,7 +86,7 @@ const StudentProfile: React.FC = () => {
 
         // Transform data to match initialProfile structure
         const formattedProfile: Profile = {
-          firstName: data.full_name?.split(" ")[0] || "Student",
+          firstName: data.full_name?.split(" ")[0] || "Organizer",
           lastName: data.full_name?.split(" ")[1] || "User",
           phone: data.phone_number || "",
           email: data.email || "",
@@ -426,4 +426,4 @@ const StudentProfile: React.FC = () => {
   );
 };
 
-export default StudentProfile;
+export default OrganizerProfile; 
